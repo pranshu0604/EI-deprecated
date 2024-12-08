@@ -24,7 +24,7 @@ const SubDash = () => {
           <IoMdPersonAdd className='mr-2 text-violet-600'/>
             <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Add Data</span>
           </h2>
-          <div className='flex justify-center gap-4'>
+          <div className='flex justify-start gap-4'>
             <button 
               className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
               onClick={() => setSchema(true)}
@@ -41,7 +41,7 @@ const SubDash = () => {
         </div>
 
         {/* Excel Sheets Section */}
-        <div className='px-4 mx-2 w-11/12'>
+        <div className='px-4 pt-4 mx-2 w-11/12'>
           <h2 className='text-lg font-semibold dark:text-white mb-2 flex items-center'>
           <IoStatsChart className='mr-2 text-violet-600'/>
             <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Excel Sheets</span>
