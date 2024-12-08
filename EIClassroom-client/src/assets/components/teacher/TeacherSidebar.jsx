@@ -131,7 +131,7 @@ const Logo = () => {
       href="/teachers/"
       className="font-normal flex space-x-2 items-center text-md text-black dark:text-white py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <img src="/logo.png" alt="EI Classroom Logo" className="h-5 w-6 flex-shrink-0" />
       <span className="font-medium text-black dark:text-white whitespace-pre opacity-1 animate-fadeIn">
         EI Classroom
       </span>
@@ -145,7 +145,7 @@ const LogoIcon = () => {
       href="#"
       className="font-normal flex space-x-2 items-center text-md text-black py-1 relative z-20"
     >
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+      <img src="/logo.png" alt="EI Classroom Logo" className="h-5 w-6 flex-shrink-0" />
     </a>
   );
 };

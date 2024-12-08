@@ -112,6 +112,28 @@ router.post('/submit-form', async (req, res) => {
   }
 });
 
+// Route to delete a student's record by ID and subjectCode
+router.delete('/sheets/:id/:subjectCode', async (req, res) => {
+  const { id, subjectCode } = req.params;
+
+  try {
+    await prisma.sheet.delete({
+      where: {
+        id_subjectCode: {
+          id: id,
+          subjectCode: subjectCode,
+        },
+      },
+    });
+
+    res.status(200).json({ message: 'Student record deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting student record:', error);
+    res.status(500).json({ error: 'Error deleting student record' });
+  }
+});
+
+
 // Route to get all rows from the Sheet table with a specific subjectCode
 router.get('/sheets', async (req, res) => {
   const { subjectCode } = req.query; // Retrieve subjectCode from query parameter
@@ -213,70 +235,53 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
       return res.status(404).json({ error: 'No student scores found for this subject' });
     }
 
+    const studentCount = studentScores.length;
+
     // Create a new Excel workbook and sheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('CO Attainment');
 
+    // Get unique mapped COs for MST1
+    const mappedCOs = [...new Set([coData.MST1_Q1, coData.MST1_Q2, coData.MST1_Q3])].filter(Boolean);
+
     // Set column widths and headers
-    worksheet.columns = [
+    const columns = [
       { header: 'Enrollment Number', key: 'enrollment', width: 20 },
       { header: 'Name', key: 'name', width: 30 },
       { header: `Q1-${coData.MST1_Q1}`, key: 'q1', width: 15 },
       { header: `Q2-${coData.MST1_Q2}`, key: 'q2', width: 15 },
-      { header: `Q3-${coData.MST1_Q3}`, key: 'q3', width: 15 },
-      { header: 'Total CO1', key: 'totalCO1', width: 15 },
-      { header: 'Total CO2', key: 'totalCO2', width: 15 },
-      { header: 'Total CO3', key: 'totalCO3', width: 15 },
-      { header: 'Total CO4', key: 'totalCO4', width: 15 },
-      { header: 'Total CO5', key: 'totalCO5', width: 15 }
+      { header: `Q3-${coData.MST1_Q3}`, key: 'q3', width: 15 }
     ];
 
-  // Function to calculate CO totals for a student
+    // Add Total CO columns only for mapped COs
+    mappedCOs.forEach(co => {
+      columns.push({ header: `Total ${co}`, key: co, width: 15 });
+    });
+
+    worksheet.columns = columns;
+
+    // Function to calculate CO totals for a student
     const calculateCOTotals = (student) => {
-      const totals = {
-        totalCO1: 0,
-        totalCO2: 0,
-        totalCO3: 0,
-        totalCO4: 0,
-        totalCO5: 0
-      };
+      const totals = {};
+      mappedCOs.forEach(co => totals[co] = 0);
 
-      // Function to add score to appropriate CO total
-      const addScoreToCO = (coMapping, score) => {
-        switch (coMapping) {
-          case 'CO1': totals.totalCO1 += score || 0; break;
-          case 'CO2': totals.totalCO2 += score || 0; break;
-          case 'CO3': totals.totalCO3 += score || 0; break;
-          case 'CO4': totals.totalCO4 += score || 0; break;
-          case 'CO5': totals.totalCO5 += score || 0; break;
-        }
-      };
-
-      // Map scores to their respective COs
-      addScoreToCO(coData.MST1_Q1, student.MST1_Q1);
-      addScoreToCO(coData.MST1_Q2, student.MST1_Q2);
-      addScoreToCO(coData.MST1_Q3, student.MST1_Q3);
+      if (coData.MST1_Q1 && student.MST1_Q1) totals[coData.MST1_Q1] += student.MST1_Q1;
+      if (coData.MST1_Q2 && student.MST1_Q2) totals[coData.MST1_Q2] += student.MST1_Q2;
+      if (coData.MST1_Q3 && student.MST1_Q3) totals[coData.MST1_Q3] += student.MST1_Q3;
 
       return totals;
     };
 
-    // Initialize grand totals for all COs
-    const grandTotals = {
-      totalCO1: 0,
-      totalCO2: 0,
-      totalCO3: 0,
-      totalCO4: 0,
-      totalCO5: 0
-    };
+    // Initialize grand totals
+    const grandTotals = {};
+    mappedCOs.forEach(co => grandTotals[co] = 0);
 
     // Add rows for each student with their scores
     studentScores.forEach((student) => {
       const coTotals = calculateCOTotals(student);
       
       // Add to grand totals
-      Object.keys(grandTotals).forEach(key => {
-        grandTotals[key] += coTotals[key];
-      });
+      mappedCOs.forEach(co => grandTotals[co] += coTotals[co]);
 
       worksheet.addRow({
         enrollment: student.id,
@@ -288,86 +293,85 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
       });
     });
 
-    const studentCount = studentScores.length;
-    
-    // Calculate averages for all COs
+    // Calculate and add averages row
     const averages = {};
-    Object.keys(grandTotals).forEach(key => {
-      averages[key] = grandTotals[key] / studentCount;
-    });
+    mappedCOs.forEach(co => averages[co] = grandTotals[co] / studentCount);
 
-    // Add a row for average (target marks)
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...averages
     });
+
     targetRow.font = { bold: true };
     targetRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFFFD700' } // Light gold background
+      fgColor: { argb: 'FFFFD700' }
     };
 
-    // Count students who achieved >= target marks for each CO
-    const studentsAboveTarget = {
-      totalCO1: 0,
-      totalCO2: 0,
-      totalCO3: 0,
-      totalCO4: 0,
-      totalCO5: 0
-    };
+    // Count students above target
+    const studentsAboveTarget = {};
+    mappedCOs.forEach(co => studentsAboveTarget[co] = 0);
 
     studentScores.forEach(student => {
       const coTotals = calculateCOTotals(student);
-      Object.keys(studentsAboveTarget).forEach(key => {
-        if (coTotals[key] >= averages[key]) {
-          studentsAboveTarget[key]++;
+      mappedCOs.forEach(co => {
+        if (coTotals[co] >= averages[co]) {
+          studentsAboveTarget[co]++;
         }
       });
     });
 
-    // Add a row for students above target marks
+    // Add students above target row
     worksheet.addRow({
       enrollment: 'Students >= Target Marks',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...studentsAboveTarget
     });
 
-    // Calculate percentages for all COs
+    // Calculate and add percentages row
     const percentages = {};
-    Object.keys(studentsAboveTarget).forEach(key => {
-      percentages[key] = `${((studentsAboveTarget[key] / studentCount) * 100).toFixed(2)}%`;
+    mappedCOs.forEach(co => {
+      percentages[co] = `${((studentsAboveTarget[co] / studentCount) * 100).toFixed(2)}%`;
     });
 
-    // Add a row for percentages
     worksheet.addRow({
       enrollment: 'Percentage',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...percentages
     });
 
-    // Calculate CO levels based on percentages
-    const calculateCOLevel = (percentage) => {
-      const numericPercentage = parseFloat(percentage);
-      if (numericPercentage >= 70) return 3;
-      if (numericPercentage >= 60) return 2;
-      if (numericPercentage >= 50) return 1;
-      return 0;
-    };
-
+    // Calculate and add CO levels row
     const coLevels = {};
-    Object.keys(percentages).forEach(key => {
-      coLevels[key] = calculateCOLevel(percentages[key]);
+    mappedCOs.forEach(co => {
+      const percentage = parseFloat(percentages[co]);
+      coLevels[co] = percentage >= 70 ? 3 : percentage >= 60 ? 2 : percentage >= 50 ? 1 : 0;
     });
 
-    // Add CO Level row
     const coLevelRow = worksheet.addRow({
       enrollment: 'CO Level',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...coLevels
     });
+
     coLevelRow.font = { bold: true };
     coLevelRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF98FB98' } // Light green background
+      fgColor: { argb: 'FF98FB98' }
     };
 
     // Prepare the response with the generated Excel file
@@ -407,70 +411,48 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
       return res.status(404).json({ error: 'No student scores found for this subject' });
     }
 
+    const studentCount = studentScores.length;
+
     // Create a new Excel workbook and sheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('CO Attainment');
 
+    // Get unique mapped COs for MST2
+    const mappedCOs = [...new Set([coData.MST2_Q1, coData.MST2_Q2, coData.MST2_Q3])].filter(Boolean);
+
     // Set column widths and headers
-    worksheet.columns = [
+    const columns = [
       { header: 'Enrollment Number', key: 'enrollment', width: 20 },
       { header: 'Name', key: 'name', width: 30 },
       { header: `Q1-${coData.MST2_Q1}`, key: 'q1', width: 15 },
       { header: `Q2-${coData.MST2_Q2}`, key: 'q2', width: 15 },
-      { header: `Q3-${coData.MST2_Q3}`, key: 'q3', width: 15 },
-      { header: 'Total CO1', key: 'totalCO1', width: 15 },
-      { header: 'Total CO2', key: 'totalCO2', width: 15 },
-      { header: 'Total CO3', key: 'totalCO3', width: 15 },
-      { header: 'Total CO4', key: 'totalCO4', width: 15 },
-      { header: 'Total CO5', key: 'totalCO5', width: 15 }
+      { header: `Q3-${coData.MST2_Q3}`, key: 'q3', width: 15 }
     ];
 
-  // Function to calculate CO totals for a student
+    // Add Total CO columns only for mapped COs
+    mappedCOs.forEach(co => {
+      columns.push({ header: `Total ${co}`, key: co, width: 15 });
+    });
+
+    worksheet.columns = columns;
+
+    // Function to calculate CO totals for a student
     const calculateCOTotals = (student) => {
-      const totals = {
-        totalCO1: 0,
-        totalCO2: 0,
-        totalCO3: 0,
-        totalCO4: 0,
-        totalCO5: 0
-      };
+      const totals = {};
+      mappedCOs.forEach(co => {
+        totals[co] = 0;
+      });
 
-      const addScoreToCO = (coMapping, score) => {
-        switch (coMapping) {
-          case 'CO1': totals.totalCO1 += score || 0; break;
-          case 'CO2': totals.totalCO2 += score || 0; break;
-          case 'CO3': totals.totalCO3 += score || 0; break;
-          case 'CO4': totals.totalCO4 += score || 0; break;
-          case 'CO5': totals.totalCO5 += score || 0; break;
-        }
-      };
-
-      // Map scores to their respective COs
-      addScoreToCO(coData.MST2_Q1, student.MST2_Q1);
-      addScoreToCO(coData.MST2_Q2, student.MST2_Q2);
-      addScoreToCO(coData.MST2_Q3, student.MST2_Q3);
+      if (coData.MST2_Q1 === coData.MST2_Q1) totals[coData.MST2_Q1] += student.MST2_Q1 || 0;
+      if (coData.MST2_Q2 === coData.MST2_Q2) totals[coData.MST2_Q2] += student.MST2_Q2 || 0;
+      if (coData.MST2_Q3 === coData.MST2_Q3) totals[coData.MST2_Q3] += student.MST2_Q3 || 0;
 
       return totals;
     };
 
-    // Initialize grand totals for all COs
-    const grandTotals = {
-      totalCO1: 0,
-      totalCO2: 0,
-      totalCO3: 0,
-      totalCO4: 0,
-      totalCO5: 0
-    };
-
-    // Add rows for each student with their scores
-    studentScores.forEach((student) => {
+    // Add student data rows
+    studentScores.forEach(student => {
       const coTotals = calculateCOTotals(student);
-      
-      // Add to grand totals
-      Object.keys(grandTotals).forEach(key => {
-        grandTotals[key] += coTotals[key];
-      });
-
       worksheet.addRow({
         enrollment: student.id,
         name: student.name,
@@ -481,86 +463,87 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
       });
     });
 
-    const studentCount = studentScores.length;
-    
-    // Calculate averages for all COs
-    const averages = {};
-    Object.keys(grandTotals).forEach(key => {
-      averages[key] = grandTotals[key] / studentCount;
+    // Calculate target marks (average)
+    const targetMarks = {};
+    mappedCOs.forEach(co => {
+      const total = studentScores.reduce((sum, student) => {
+        const totals = calculateCOTotals(student);
+        return sum + totals[co];
+      }, 0);
+      targetMarks[co] = total / studentCount;
     });
 
-    // Add a row for average (target marks)
+    // Add target marks row
     const targetRow = worksheet.addRow({
-      enrollment: 'Average (Target Marks)',
-      ...averages
+      enrollment: 'Target Marks',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
+      ...targetMarks
     });
+
     targetRow.font = { bold: true };
     targetRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFFFD700' } // Light gold background
+      fgColor: { argb: 'FFFFD700' }
     };
 
-    // Count students who achieved >= target marks for each CO
-    const studentsAboveTarget = {
-      totalCO1: 0,
-      totalCO2: 0,
-      totalCO3: 0,
-      totalCO4: 0,
-      totalCO5: 0
-    };
-
-    studentScores.forEach(student => {
-      const coTotals = calculateCOTotals(student);
-      Object.keys(studentsAboveTarget).forEach(key => {
-        if (coTotals[key] >= averages[key]) {
-          studentsAboveTarget[key]++;
-        }
-      });
+    // Count students above target for each CO
+    const studentsAboveTarget = {};
+    mappedCOs.forEach(co => {
+      studentsAboveTarget[co] = studentScores.filter(student => {
+        const totals = calculateCOTotals(student);
+        return totals[co] >= targetMarks[co];
+      }).length;
     });
 
-    // Add a row for students above target marks
     worksheet.addRow({
-      enrollment: 'Students >= Target Marks',
+      enrollment: 'Students >= Target',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...studentsAboveTarget
     });
 
-    // Calculate percentages for all COs
+    // Calculate percentages
     const percentages = {};
-    Object.keys(studentsAboveTarget).forEach(key => {
-      percentages[key] = `${((studentsAboveTarget[key] / studentCount) * 100).toFixed(2)}%`;
+    mappedCOs.forEach(co => {
+      percentages[co] = `${((studentsAboveTarget[co] / studentCount) * 100).toFixed(2)}%`;
     });
 
-    // Add a row for percentages
     worksheet.addRow({
       enrollment: 'Percentage',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...percentages
     });
 
-    // Calculate CO levels based on percentages
-    const calculateCOLevel = (percentage) => {
-      const numericPercentage = parseFloat(percentage);
-      if (numericPercentage >= 70) return 3;
-      if (numericPercentage >= 60) return 2;
-      if (numericPercentage >= 50) return 1;
-      return 0;
-    };
-
+    // Calculate and add CO levels row
     const coLevels = {};
-    Object.keys(percentages).forEach(key => {
-      coLevels[key] = calculateCOLevel(percentages[key]);
+    mappedCOs.forEach(co => {
+      const percentage = parseFloat(percentages[co]);
+      coLevels[co] = percentage >= 70 ? 3 : percentage >= 60 ? 2 : percentage >= 50 ? 1 : 0;
     });
 
-    // Add CO Level row
     const coLevelRow = worksheet.addRow({
       enrollment: 'CO Level',
+      name: '',
+      q1: '',
+      q2: '',
+      q3: '',
       ...coLevels
     });
+
     coLevelRow.font = { bold: true };
     coLevelRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF98FB98' } // Light green background
+      fgColor: { argb: 'FF98FB98' }
     };
 
     // Prepare the response with the generated Excel file
@@ -773,6 +756,26 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
       fgColor: { argb: 'FFFFD700' } // Light gold background
     };
 
+    // Add students above target row
+    const studentsAboveTarget = {
+      id: 'Students Above Target',
+      name: '',
+      co1: sheets.filter(s => (s.EndSem_Q1 || 0) >= targetMarks.co1).length,
+      co2: sheets.filter(s => (s.EndSem_Q2 || 0) >= targetMarks.co2).length,
+      co3: sheets.filter(s => (s.EndSem_Q3 || 0) >= targetMarks.co3).length,
+      co4: sheets.filter(s => (s.EndSem_Q4 || 0) >= targetMarks.co4).length,
+      co5: sheets.filter(s => (s.EndSem_Q5 || 0) >= targetMarks.co5).length,
+    };
+
+    // Add students above target row
+    const studentsAboveTargetRow = worksheet.addRow(studentsAboveTarget);
+    studentsAboveTargetRow.font = { bold: true };
+    studentsAboveTargetRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF0E68C' } // Light khaki background
+    };
+  
     // Add CO level row
     const coLevelRow = worksheet.addRow(coLevels);
     coLevelRow.font = { bold: true };
@@ -811,6 +814,156 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
   }
 });
 
+router.get('/assignment-excel/:subjectCode', async (req, res) => {
+  try {
+    const { subjectCode } = req.params;
+
+    // Fetch all sheets for the given subject
+    const sheets = await prisma.sheet.findMany({
+      where: {
+        subjectCode: subjectCode
+      },
+      select: {
+        id: true,
+        name: true,
+        Assignment_CO1: true,
+        Assignment_CO2: true,
+        Assignment_CO3: true,
+        Assignment_CO4: true,
+        Assignment_CO5: true,
+      }
+    });
+
+    // Create a new workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Assignment Marks');
+
+    // Define headers
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Name', key: 'name', width: 20 },
+      { header: 'CO1', key: 'co1', width: 10 },
+      { header: 'CO2', key: 'co2', width: 10 },
+      { header: 'CO3', key: 'co3', width: 10 },
+      { header: 'CO4', key: 'co4', width: 10 },
+      { header: 'CO5', key: 'co5', width: 10 },
+    ];
+
+    // Add data rows
+    sheets.forEach(sheet => {
+      worksheet.addRow({
+        id: sheet.id,
+        name: sheet.name,
+        co1: sheet.Assignment_CO1 || 0,
+        co2: sheet.Assignment_CO2 || 0,
+        co3: sheet.Assignment_CO3 || 0,
+        co4: sheet.Assignment_CO4 || 0,
+        co5: sheet.Assignment_CO5 || 0,
+      });
+    });
+
+    // Calculate target marks (averages)
+    const totalRows = sheets.length;
+    const targetMarks = {
+      id: 'Target Marks',
+      name: '',
+      co1: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 || 0), 0) / totalRows,
+      co2: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 || 0), 0) / totalRows,
+      co3: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 || 0), 0) / totalRows,
+      co4: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 || 0), 0) / totalRows,
+      co5: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 || 0), 0) / totalRows,
+    };
+
+    // Calculate CO levels
+    const calculateCOLevel = (scores, targetMark) => {
+      const totalStudents = scores.length;
+      const studentsAboveTarget = scores.filter(score => (score || 0) >= targetMark).length;
+      const percentage = (studentsAboveTarget / totalStudents) * 100;
+
+      if (percentage >= 70) return 3;
+      if (percentage >= 60) return 2;
+      if (percentage >= 50) return 1;
+      return 0;
+    };
+
+    const coLevels = {
+      id: 'CO Level',
+      name: '',
+      co1: calculateCOLevel(sheets.map(s => s.Assignment_CO1), targetMarks.co1),
+      co2: calculateCOLevel(sheets.map(s => s.Assignment_CO2), targetMarks.co2),
+      co3: calculateCOLevel(sheets.map(s => s.Assignment_CO3), targetMarks.co3),
+      co4: calculateCOLevel(sheets.map(s => s.Assignment_CO4), targetMarks.co4),
+      co5: calculateCOLevel(sheets.map(s => s.Assignment_CO5), targetMarks.co5),
+    };
+
+    // Add target marks row
+    const targetRow = worksheet.addRow(targetMarks);
+    targetRow.font = { bold: true };
+    targetRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFD700' } // Light gold background
+    };
+
+    // Add students above target row
+    const studentsAboveTarget = {
+      id: 'Students Above Target',
+      name: '',
+      co1: sheets.filter(s => (s.Assignment_CO1 || 0) >= targetMarks.co1).length,
+      co2: sheets.filter(s => (s.Assignment_CO2 || 0) >= targetMarks.co2).length,
+      co3: sheets.filter(s => (s.Assignment_CO3 || 0) >= targetMarks.co3).length,
+      co4: sheets.filter(s => (s.Assignment_CO4 || 0) >= targetMarks.co4).length,
+      co5: sheets.filter(s => (s.Assignment_CO5 || 0) >= targetMarks.co5).length,
+    };
+
+    // Add students above target row
+    const studentsAboveTargetRow = worksheet.addRow(studentsAboveTarget);
+    studentsAboveTargetRow.font = { bold: true };
+    studentsAboveTargetRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF0E68C' } // Light khaki background
+    };
+  
+    // Add CO level row
+    const coLevelRow = worksheet.addRow(coLevels);
+    coLevelRow.font = { bold: true };
+    coLevelRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF98FB98' } // Light green background
+    };
+
+    // Style the headers
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD3D3D3' }
+    };
+
+    // Set number format for CO columns to show 2 decimal places
+    for (let i = 3; i <= 7; i++) {
+      worksheet.getColumn(i).numFmt = '0.00';
+    }
+
+    // Generate Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=assignment_marks_${subjectCode}.xlsx`);
+
+    // Send the file
+    res.send(buffer);
+
+  } catch (error) {
+    console.error('Error generating Excel file:', error);
+    res.status(500).json({ error: 'Failed to generate Excel file' });
+  }
+});
+
+
 // Helper function to calculate MST scores for a specific CO
 const calculateMSTScores = (sheets, coMappings) => {
   const scores = {
@@ -846,16 +999,15 @@ const calculateMSTScores = (sheets, coMappings) => {
 };
 
 // Helper function to calculate Quiz/Assignment scores
-const calculateQuizScores = (sheets, quizCOs) => {
+const calculateQuizScores = (sheets) => {
   const scores = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
   
   sheets.forEach(sheet => {
-    if (sheet.Quiz_Assignment) {
-      const scorePerCO = sheet.Quiz_Assignment / quizCOs.length;
-      quizCOs.forEach(co => {
-        scores[co] = (scores[co] || 0) + scorePerCO;
-      });
-    }
+    if (sheet.Assignment_CO1) scores.CO1 += sheet.Assignment_CO1;
+    if (sheet.Assignment_CO2) scores.CO2 += sheet.Assignment_CO2;
+    if (sheet.Assignment_CO3) scores.CO3 += sheet.Assignment_CO3;
+    if (sheet.Assignment_CO4) scores.CO4 += sheet.Assignment_CO4;
+    if (sheet.Assignment_CO5) scores.CO5 += sheet.Assignment_CO5;
   });
   
   return scores;

@@ -2,50 +2,76 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { FaTrash } from "react-icons/fa";
+import { IoStatsChart } from "react-icons/io5";
+import { IoMdPersonAdd } from "react-icons/io";
+
 
 const SubDash = () => {
   const { subjectCode } = useParams();
   const [create, setCreate] = useState(false);
   const [schema, setSchema] = useState(false);
   return (
-    <div className=" w-full min-h-screen h-full pb-20 poppins">
+    <div className="w-full min-h-screen h-full pb-12 poppins">
       {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} />}
       {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} />}
       <div>
-        <h1 className='text-3xl font-bold dark:text-white pt-10 text-center'>{subjectCode}</h1>
-        <div className='md:flex justify-center grid grid-cols-2 mx-5 gap-5 pt-5 '>
-        <button 
-          className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => setSchema(true)}
-          >
-            Define Exam Schema
-          </button>
-          <button
-          className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => setCreate(true)}
-          >
-            Add Student
-          </button>
-          <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => overallSheet(subjectCode)}>
-            Overall Report
-          </button>  
-          <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => downloadMST1(subjectCode)}>
-            MST1
-          </button>  
-          <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => downloadMST2(subjectCode)}>
-            MST2
-          </button>  
-          <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => downloadEndSem(subjectCode)}>
-            EndSem
-          </button>  
-          <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800'
-          onClick={() => downloadCOSheet(subjectCode)}>
-            CO Analysis
-          </button> 
+        <h1 className='text-3xl font-bold dark:text-white pt-6 text-center'>{subjectCode}</h1>
+        
+        {/* Add Data Section */}
+        <div className='mb-4 mt-4 px-4 mx-2'>
+          <h2 className='text-lg font-semibold dark:text-white mb-2 flex items-center'>
+          <IoMdPersonAdd className='mr-2 text-violet-600'/>
+            <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Add Data</span>
+          </h2>
+          <div className='flex justify-center gap-4'>
+            <button 
+              className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => setSchema(true)}
+            >
+              Define Exam Schema
+            </button>
+            <button
+              className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => setCreate(true)}
+            >
+              Add Student
+            </button>
+          </div>
+        </div>
+
+        {/* Excel Sheets Section */}
+        <div className='px-4 mx-2 w-11/12'>
+          <h2 className='text-lg font-semibold dark:text-white mb-2 flex items-center'>
+          <IoStatsChart className='mr-2 text-violet-600'/>
+            <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Excel Sheets</span>
+          </h2>
+          <div className='grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 gap-4'>
+            <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => overallSheet(subjectCode)}>
+              Overall Report
+            </button>  
+            <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadMST1(subjectCode)}>
+              MST1
+            </button>  
+            <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadMST2(subjectCode)}>
+              MST2
+            </button>  
+            <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadAssignment(subjectCode)}>
+              Assignment
+            </button>  
+            <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadEndSem(subjectCode)}>
+              EndSem
+            </button>  
+            <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadCOSheet(subjectCode)}>
+              CO Analysis
+            </button>
+          </div>
         </div>
         <List subjectCode={subjectCode}/>
       </div>
@@ -144,46 +170,54 @@ const List = ({ subjectCode }) => {
             <th scope="col" className="px-6 py-3">Q3</th>
             <th scope="col" className="px-6 py-3">Q4</th>
             <th scope="col" className="px-6 py-3">Q5</th>
+            <th scope="col" className="px-6 py-3">Remove</th>
           </tr>
         </thead>
         <tbody>
           {sheets.length === 0 ? (
             <tr className="bg-white border-[1px] dark:bg-black dark:text-gray-300">
-              <td colSpan="14" className="px-6 py-4 text-center">
+              <td colSpan="18" className="px-6 py-4 text-center">
                 No students found
               </td>
             </tr>
           ) : (
-            sheets.map((sheet) => (
-              <tr key={sheet.id} className="bg-white border-[1px] dark:border-neutral-700  dark:bg-black dark:text-gray-300">
-                <td className="px-6 py-3">{sheet.id}</td>
-                <td className="px-6 py-3">{sheet.name}</td>
+            [...sheets]
+              .sort((a, b) => a.id.localeCompare(b.id))
+              .map((sheet) => (
+                <tr key={sheet.id} className="bg-white border-[1px] dark:border-neutral-700 dark:bg-black dark:text-gray-300">
+                  <td className="px-6 py-3">{sheet.id}</td>
+                  <td className="px-6 py-3">{sheet.name}</td>
 
-                {/* MST1 Sub-columns */}
-                <td className="px-6 py-3">{sheet.MST1_Q1 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.MST1_Q2 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.MST1_Q3 ?? '-'}</td>
+                  {/* MST1 Sub-columns */}
+                  <td className="px-6 py-3">{sheet.MST1_Q1 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.MST1_Q2 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.MST1_Q3 ?? '-'}</td>
 
-                {/* MST2 Sub-columns */}
-                <td className="px-6 py-3">{sheet.MST2_Q1 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.MST2_Q2 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.MST2_Q3 ?? '-'}</td>
+                  {/* MST2 Sub-columns */}
+                  <td className="px-6 py-3">{sheet.MST2_Q1 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.MST2_Q2 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.MST2_Q3 ?? '-'}</td>
 
-                {/* Assignment Sub-columns */}
-                <td className="px-6 py-3">{sheet.Assignment_CO1 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.Assignment_CO2 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.Assignment_CO3 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.Assignment_CO4 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.Assignment_CO5 ?? '-'}</td>
+                  {/* Assignment Sub-columns */}
+                  <td className="px-6 py-3">{sheet.Assignment_CO1 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.Assignment_CO2 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.Assignment_CO3 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.Assignment_CO4 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.Assignment_CO5 ?? '-'}</td>
 
-                {/* Endsem Sub-columns */}
-                <td className="px-6 py-3">{sheet.EndSem_Q1 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.EndSem_Q2 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.EndSem_Q3 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.EndSem_Q4 ?? '-'}</td>
-                <td className="px-6 py-3">{sheet.EndSem_Q5 ?? '-'}</td>
-              </tr>
-            ))
+                  {/* Endsem Sub-columns */}
+                  <td className="px-6 py-3">{sheet.EndSem_Q1 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.EndSem_Q2 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.EndSem_Q3 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.EndSem_Q4 ?? '-'}</td>
+                  <td className="px-6 py-3">{sheet.EndSem_Q5 ?? '-'}</td>
+                  <td className="px-6 py-3">
+                    <button className='text-red-500' onClick={() => deleteStudent(sheet.id,subjectCode)}>
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))
           )}
         </tbody>
       </table>
@@ -191,6 +225,15 @@ const List = ({ subjectCode }) => {
     </div>
   );
 };
+
+
+const deleteStudent = async (id, subjectCode) => {
+  if(window.confirm('Are you sure you want to delete this student?')){
+    const response = await axios.delete(`http://localhost:8080/api/operation/sheets/${id}/${subjectCode}`);
+    console.log(response.data);
+    window.location.reload();
+  }
+}
 
 
 
@@ -642,6 +685,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   );
 };
 
+
   const overallSheet = (subjectCode) => {
     axios.get(`http://localhost:8080/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
@@ -708,6 +752,24 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'EndSem_Sheet.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch((error) => {
+      console.error('Error downloading the Excel sheet:', error);
+    });
+  };
+
+  const downloadAssignment = (subjectCode) => {
+    axios.get(`http://localhost:8080/api/operation/assignment-excel/${subjectCode}`, {
+      responseType: 'blob',
+    })
+    .then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Assignment_Sheet.xlsx');
       document.body.appendChild(link);
       link.click();
       link.remove();
