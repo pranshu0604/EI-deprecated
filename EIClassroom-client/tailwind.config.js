@@ -3,6 +3,19 @@ import svgToDataUri from "mini-svg-data-uri";
 import colors from "tailwindcss/colors";
 import { flattenColorPalette } from "tailwindcss/lib/util/flattenColorPalette";
 
+function addVariablesForColors({ addBase, theme }) {
+  let allColors = flattenColorPalette(theme("colors"));
+  let newVars = {};
+
+  Object.entries(allColors).forEach(([key, val]) => {
+    newVars[`--${key}`] = val;
+  });
+
+  addBase({
+    ":root": newVars,
+  });
+}
+
 export default {
   content: [
     "./index.html",
@@ -51,11 +64,3 @@ export default {
     },
   ],
 };
-
-function addVariablesForColors({ addBase, theme }) {
-  let allColors = flattenColorPalette(theme("colors"));
-  let newVars = Object.fromEntries(Object.entries(allColors).map(([key, val]) => [`--${key}`, val]));
-  addBase({
-    ":root": newVars,
-  });
-}
