@@ -106,7 +106,7 @@ const List = ({ subjectCode }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:8080/api/operation/sheets?subjectCode=${subjectCode}`);
+        const response = await axios.get(`https://ei-deprecated.onrender.com/api/operation/sheets?subjectCode=${subjectCode}`);
         setSheets(response.data);
         setError(null);
         setLoading(false);
@@ -243,7 +243,7 @@ const List = ({ subjectCode }) => {
 
 const deleteStudent = async (id, subjectCode) => {
   if(window.confirm('Are you sure you want to delete this student?')){
-    const response = await axios.delete(`http://localhost:8080/api/operation/sheets/${id}/${subjectCode}`);
+    const response = await axios.delete(`https://ei-deprecated.onrender.com/api/operation/sheets/${id}/${subjectCode}`);
     console.log(response.data);
     window.location.reload();
   }
@@ -301,7 +301,7 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
     console.log('Data to Submit:', dataToSubmit); // Debug log to check the final form data
 
     try {
-      const response = await axios.post(`http://localhost:8080/api/operation/co-form`, dataToSubmit);
+      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/co-form`, dataToSubmit);
       alert('Form submitted successfully!');
       console.log(response.data);
       setSchema(false); // Optionally close the form
@@ -423,7 +423,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
     setError('');
 
     try {
-      const response = await axios.post(`http://localhost:8080/api/operation/submit-form`, formData, {
+      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/submit-form`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -685,7 +685,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
 
 
   const overallSheet = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -704,7 +704,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadMST1 = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/downloadmst1/${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst1/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -723,7 +723,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadMST2 = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/downloadmst2/${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst2/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -742,7 +742,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadEndSem = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/end-excel/${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/end-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -760,7 +760,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadAssignment = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/assignment-excel/${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/assignment-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -778,7 +778,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadCOSheet = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/generate-co-attainment/${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/generate-co-attainment/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -796,7 +796,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadCOMatrix = (subjectCode) => {
-    axios.get(`http://localhost:8080/api/operation/co-matrix/${subjectCode}`, {
+    axios.get(`https://ei-deprecated.onrender.com/api/operation/co-matrix/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
