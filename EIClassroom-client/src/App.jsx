@@ -21,7 +21,7 @@ function App() {
             <Route path="/subject/:subjectCode" element={<SubDash />} />
             {/* <Route path="/teachers/subjects/:subjectCode" element={<SubDash />} /> */}
             <Route path='/allsubs' element={<HOD />} />
-           
+            <Route path="/allsubs/:subjectCode" element={<SubDash />} />
             <Route path='/students/*' element={<StudentSidebar />} />
             <Route path='/teachers/*' element={<TeacherSidebar />} />
           </Routes>
