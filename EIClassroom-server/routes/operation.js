@@ -6,7 +6,6 @@ router.use(express.json());
 
 const prisma = new PrismaClient();
 
-
 // Route to post Exam CO schema
 router.post('/co-form', async (req, res) => {
   const { subjectCode, mst1, mst2 } = req.body;
@@ -133,7 +132,6 @@ router.delete('/sheets/:id/:subjectCode', async (req, res) => {
   }
 });
 
-
 // Route to get all rows from the Sheet table with a specific subjectCode
 router.get('/sheets', async (req, res) => {
   const { subjectCode } = req.query; // Retrieve subjectCode from query parameter
@@ -211,7 +209,6 @@ router.put('/sheets/:id/:subjectCode', async (req, res) => {
 });
 
 const ExcelJS = require('exceljs');
-
 
 router.get('/downloadmst1/:subjectCode', async (req, res) => {
   const { subjectCode } = req.params;
@@ -304,7 +301,7 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = counts[co] ? (grandTotals[co] / counts[co]).toFixed(2) : null);
+    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.round(grandTotals[co] / counts[co]) : null);
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
@@ -397,7 +394,6 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
   }
 });
 
-
 router.get('/downloadmst2/:subjectCode', async (req, res) => {
   const { subjectCode } = req.params;
 
@@ -489,7 +485,7 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = counts[co] ? (grandTotals[co] / counts[co]).toFixed(2) : null);
+    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.round(grandTotals[co] / counts[co]) : null);
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
@@ -739,7 +735,7 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
     const calculateAverage = (values) => {
       const validValues = values.filter(value => value != null);
       const sum = validValues.reduce((acc, value) => acc + parseFloat(value), 0);
-      return validValues.length ? (sum / validValues.length).toFixed(2) : '';
+      return validValues.length ? Math.round(sum / validValues.length) : '';
     };
 
     const targetMarks = {
@@ -895,11 +891,11 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
     const targetMarks = {
       id: 'Target Marks',
       name: '',
-      co1: sheets.some(sheet => sheet.Assignment_CO1 != null) ? sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 != null ? parseFloat(sheet.Assignment_CO1) : 0), 0) / totalRows : '',
-      co2: sheets.some(sheet => sheet.Assignment_CO2 != null) ? sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 != null ? parseFloat(sheet.Assignment_CO2) : 0), 0) / totalRows : '',
-      co3: sheets.some(sheet => sheet.Assignment_CO3 != null) ? sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 != null ? parseFloat(sheet.Assignment_CO3) : 0), 0) / totalRows : '',
-      co4: sheets.some(sheet => sheet.Assignment_CO4 != null) ? sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 != null ? parseFloat(sheet.Assignment_CO4) : 0), 0) / totalRows : '',
-      co5: sheets.some(sheet => sheet.Assignment_CO5 != null) ? sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 != null ? parseFloat(sheet.Assignment_CO5) : 0), 0) / totalRows : '',
+      co1: sheets.some(sheet => sheet.Assignment_CO1 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 != null ? parseFloat(sheet.Assignment_CO1) : 0), 0) / totalRows) : '',
+      co2: sheets.some(sheet => sheet.Assignment_CO2 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 != null ? parseFloat(sheet.Assignment_CO2) : 0), 0) / totalRows) : '',
+      co3: sheets.some(sheet => sheet.Assignment_CO3 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 != null ? parseFloat(sheet.Assignment_CO3) : 0), 0) / totalRows) : '',
+      co4: sheets.some(sheet => sheet.Assignment_CO4 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 != null ? parseFloat(sheet.Assignment_CO4) : 0), 0) / totalRows) : '',
+      co5: sheets.some(sheet => sheet.Assignment_CO5 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 != null ? parseFloat(sheet.Assignment_CO5) : 0), 0) / totalRows) : '',
     };
 
     // Calculate CO levels
