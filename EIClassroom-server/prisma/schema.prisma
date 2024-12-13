@@ -24,6 +24,7 @@ model Subject {
   teacherId Int
   sheets    Sheet[]
   CO       CO[]
+  Levels   Levels[]
 }
 
 model Sheet {
@@ -33,22 +34,22 @@ model Sheet {
   subject             Subject       @relation(fields: [subjectCode], references: [code])
   teacher             Teacher       @relation(fields: [teacherId], references: [id])
   teacherId           Int
-  MST1_Q1             Int?          // Nullable field
-  MST1_Q2             Int?          // Nullable field
-  MST1_Q3             Int?          // Nullable field
-  MST2_Q1             Int?          // Nullable field
-  MST2_Q2             Int?          // Nullable field
-  MST2_Q3             Int?          // Nullable field
-  Assignment_CO1     Int?          // Nullable field
-  Assignment_CO2     Int?          // Nullable field
-  Assignment_CO3     Int?          // Nullable field
-  Assignment_CO4     Int?          // Nullable field
-  Assignment_CO5     Int?          // Nullable field
-  EndSem_Q1           Int?          // Nullable field
-  EndSem_Q2           Int?          // Nullable field
-  EndSem_Q3           Int?          // Nullable field
-  EndSem_Q4           Int?          // Nullable field
-  EndSem_Q5           Int?          // Nullable field
+  MST1_Q1             Decimal?          // Nullable field
+  MST1_Q2             Decimal?          // Nullable field
+  MST1_Q3             Decimal?          // Nullable field
+  MST2_Q1             Decimal?          // Nullable field
+  MST2_Q2             Decimal?          // Nullable field
+  MST2_Q3             Decimal?          // Nullable field
+  Assignment_CO1      Decimal?          // Nullable field
+  Assignment_CO2      Decimal?          // Nullable field
+  Assignment_CO3      Decimal?          // Nullable field
+  Assignment_CO4      Decimal?          // Nullable field
+  Assignment_CO5      Decimal?          // Nullable field
+  EndSem_Q1           Decimal?          // Nullable field
+  EndSem_Q2           Decimal?          // Nullable field
+  EndSem_Q3           Decimal?          // Nullable field
+  EndSem_Q4           Decimal?          // Nullable field
+  EndSem_Q5           Decimal?          // Nullable field
   @@id([id, subjectCode]) // Composite primary key
 }
 
@@ -62,4 +63,15 @@ model CO {
   MST2_Q1 String
   MST2_Q2 String
   MST2_Q3 String
+}
+
+model Levels{
+  subjectCode String @id 
+  subject             Subject       @relation(fields: [subjectCode], references: [code])
+  CO1 Decimal?
+  CO2 Decimal?
+  CO3 Decimal?
+  CO4 Decimal?
+  CO5 Decimal?
+  
 }
