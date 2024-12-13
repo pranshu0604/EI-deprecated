@@ -92,7 +92,7 @@ const List = ({ subjectCode }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`https://ei-deprecated.onrender.com/api/operation/sheets?subjectCode=${subjectCode}`);
+        const response = await axios.get(`http://localhost:8080/api/operation/sheets?subjectCode=${subjectCode}`);
         setSheets(response.data);
         setError(null);
         setLoading(false);
@@ -229,7 +229,7 @@ const List = ({ subjectCode }) => {
 
 const deleteStudent = async (id, subjectCode) => {
   if(window.confirm('Are you sure you want to delete this student?')){
-    const response = await axios.delete(`https://ei-deprecated.onrender.com/api/operation/sheets/${id}/${subjectCode}`);
+    const response = await axios.delete(`http://localhost:8080/api/operation/sheets/${id}/${subjectCode}`);
     console.log(response.data);
     window.location.reload();
   }
@@ -287,7 +287,7 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
     console.log('Data to Submit:', dataToSubmit); // Debug log to check the final form data
 
     try {
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/co-form`, dataToSubmit);
+      const response = await axios.post(`http://localhost:8080/api/operation/co-form`, dataToSubmit);
       alert('Form submitted successfully!');
       console.log(response.data);
       setSchema(false); // Optionally close the form
@@ -409,7 +409,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
     setError('');
 
     try {
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/submit-form`, formData, {
+      const response = await axios.post(`http://localhost:8080/api/operation/submit-form`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -469,7 +469,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst1_Q1"
                     value={formData.mst1.Q1}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -481,7 +480,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst1_Q2"
                     value={formData.mst1.Q2}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -493,7 +491,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst1_Q3"
                     value={formData.mst1.Q3}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -511,7 +508,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst2_Q1"
                     value={formData.mst2.Q1}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -523,7 +519,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst2_Q2"
                     value={formData.mst2.Q2}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -535,7 +530,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst2_Q3"
                     value={formData.mst2.Q3}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -553,7 +547,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO1"
                     value={formData.assignment.CO1}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -565,7 +558,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO2"
                     value={formData.assignment.CO2}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -577,7 +569,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO3"
                     value={formData.assignment.CO3}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -589,7 +580,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO4"
                     value={formData.assignment.CO4}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -601,7 +591,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO5"
                     value={formData.assignment.CO5}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -619,7 +608,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q1"
                     value={formData.endsem.Q1}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -631,7 +619,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q2"
                     value={formData.endsem.Q2}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -643,7 +630,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q3"
                     value={formData.endsem.Q3}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -655,7 +641,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q4"
                     value={formData.endsem.Q4}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -667,7 +652,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q5"
                     value={formData.endsem.Q5}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -687,7 +671,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
 
 
   const overallSheet = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -706,7 +690,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadMST1 = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst1/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/downloadmst1/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -725,7 +709,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadMST2 = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst2/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/downloadmst2/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -744,7 +728,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadEndSem = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/end-excel/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/end-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -762,7 +746,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadAssignment = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/assignment-excel/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/assignment-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -780,7 +764,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadCOSheet = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/generate-co-attainment/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/generate-co-attainment/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
