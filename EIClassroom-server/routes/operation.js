@@ -263,39 +263,48 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
     // Function to calculate CO totals for a student
     const calculateCOTotals = (student) => {
       const totals = {};
-      mappedCOs.forEach(co => totals[co] = 0);
+      mappedCOs.forEach(co => totals[co] = null);
 
-      if (coData.MST1_Q1 && student.MST1_Q1) totals[coData.MST1_Q1] += parseFloat(student.MST1_Q1);
-      if (coData.MST1_Q2 && student.MST1_Q2) totals[coData.MST1_Q2] += parseFloat(student.MST1_Q2);
-      if (coData.MST1_Q3 && student.MST1_Q3) totals[coData.MST1_Q3] += parseFloat(student.MST1_Q3);
+      if (coData.MST1_Q1 && student.MST1_Q1 != null) totals[coData.MST1_Q1] = (totals[coData.MST1_Q1] || 0) + parseFloat(student.MST1_Q1);
+      if (coData.MST1_Q2 && student.MST1_Q2 != null) totals[coData.MST1_Q2] = (totals[coData.MST1_Q2] || 0) + parseFloat(student.MST1_Q2);
+      if (coData.MST1_Q3 && student.MST1_Q3 != null) totals[coData.MST1_Q3] = (totals[coData.MST1_Q3] || 0) + parseFloat(student.MST1_Q3);
 
       return totals;
     };
 
-    // Initialize grand totals
+    // Initialize grand totals and counts
     const grandTotals = {};
-    mappedCOs.forEach(co => grandTotals[co] = 0);
+    const counts = {};
+    mappedCOs.forEach(co => {
+      grandTotals[co] = 0;
+      counts[co] = 0;
+    });
 
     // Add rows for each student with their scores
     studentScores.forEach((student) => {
       const coTotals = calculateCOTotals(student);
       
-      // Add to grand totals
-      mappedCOs.forEach(co => grandTotals[co] += coTotals[co]);
+      // Add to grand totals and counts
+      mappedCOs.forEach(co => {
+        if (coTotals[co] != null) {
+          grandTotals[co] += coTotals[co];
+          counts[co]++;
+        }
+      });
 
       worksheet.addRow({
         enrollment: student.id,
         name: student.name,
-        q1: parseFloat(student.MST1_Q1) || 0,
-        q2: parseFloat(student.MST1_Q2) || 0,
-        q3: parseFloat(student.MST1_Q3) || 0,
+        q1: student.MST1_Q1 != null ? parseFloat(student.MST1_Q1) : '',
+        q2: student.MST1_Q2 != null ? parseFloat(student.MST1_Q2) : '',
+        q3: student.MST1_Q3 != null ? parseFloat(student.MST1_Q3) : '',
         ...coTotals
       });
     });
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = (grandTotals[co] / studentCount).toFixed(2));
+    mappedCOs.forEach(co => averages[co] = counts[co] ? (grandTotals[co] / counts[co]).toFixed(2) : null);
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
@@ -320,7 +329,7 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
     studentScores.forEach(student => {
       const coTotals = calculateCOTotals(student);
       mappedCOs.forEach(co => {
-        if (coTotals[co] >= averages[co]) {
+        if (coTotals[co] != null && coTotals[co] >= averages[co]) {
           studentsAboveTarget[co]++;
         }
       });
