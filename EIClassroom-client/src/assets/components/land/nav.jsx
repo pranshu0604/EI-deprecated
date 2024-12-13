@@ -7,7 +7,7 @@ export default function Navbar() {
       <nav className="flex justify-between items-center px-3 py-4">
         <div className="flex-1">
           <h1 className="md:text-2xl text-nowrap text-xl px-3 font-bold">
-            <a href="#home">EI Classroom Portal</a>
+            <a href="#home">EI LMS</a>
           </h1>
         </div>
 
