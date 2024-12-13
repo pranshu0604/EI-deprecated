@@ -6,7 +6,6 @@ router.use(express.json());
 
 const prisma = new PrismaClient();
 
-
 // Route to post Exam CO schema
 router.post('/co-form', async (req, res) => {
   const { subjectCode, mst1, mst2 } = req.body;
@@ -86,22 +85,22 @@ router.post('/submit-form', async (req, res) => {
         name,
         subjectCode,
         teacherId: subject.teacher.id, // Dynamically connect teacher through subjectCode
-        MST1_Q1: parseInt(MST1_Q1),
-        MST1_Q2: parseInt(MST1_Q2),
-        MST1_Q3: parseInt(MST1_Q3),
-        MST2_Q1: parseInt(MST2_Q1),
-        MST2_Q2: parseInt(MST2_Q2),
-        MST2_Q3: parseInt(MST2_Q3),
-        EndSem_Q1: parseInt(EndSem_Q1),
-        EndSem_Q2: parseInt(EndSem_Q2),
-        EndSem_Q3: parseInt(EndSem_Q3),
-        EndSem_Q4: parseInt(EndSem_Q4),
-        EndSem_Q5: parseInt(EndSem_Q5),
-        Assignment_CO1: parseInt(Assignment_CO1),
-        Assignment_CO2: parseInt(Assignment_CO2),
-        Assignment_CO3: parseInt(Assignment_CO3),
-        Assignment_CO4: parseInt(Assignment_CO4),
-        Assignment_CO5: parseInt(Assignment_CO5),
+        MST1_Q1: parseFloat(MST1_Q1),
+        MST1_Q2: parseFloat(MST1_Q2),
+        MST1_Q3: parseFloat(MST1_Q3),
+        MST2_Q1: parseFloat(MST2_Q1),
+        MST2_Q2: parseFloat(MST2_Q2),
+        MST2_Q3: parseFloat(MST2_Q3),
+        EndSem_Q1: parseFloat(EndSem_Q1),
+        EndSem_Q2: parseFloat(EndSem_Q2),
+        EndSem_Q3: parseFloat(EndSem_Q3),
+        EndSem_Q4: parseFloat(EndSem_Q4),
+        EndSem_Q5: parseFloat(EndSem_Q5),
+        Assignment_CO1: parseFloat(Assignment_CO1),
+        Assignment_CO2: parseFloat(Assignment_CO2),
+        Assignment_CO3: parseFloat(Assignment_CO3),
+        Assignment_CO4: parseFloat(Assignment_CO4),
+        Assignment_CO5: parseFloat(Assignment_CO5),
       },
     });
 
@@ -132,7 +131,6 @@ router.delete('/sheets/:id/:subjectCode', async (req, res) => {
     res.status(500).json({ error: 'Error deleting student record' });
   }
 });
-
 
 // Route to get all rows from the Sheet table with a specific subjectCode
 router.get('/sheets', async (req, res) => {
@@ -212,7 +210,6 @@ router.put('/sheets/:id/:subjectCode', async (req, res) => {
 
 const ExcelJS = require('exceljs');
 
-
 router.get('/downloadmst1/:subjectCode', async (req, res) => {
   const { subjectCode } = req.params;
 
@@ -263,39 +260,48 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
     // Function to calculate CO totals for a student
     const calculateCOTotals = (student) => {
       const totals = {};
-      mappedCOs.forEach(co => totals[co] = 0);
+      mappedCOs.forEach(co => totals[co] = null);
 
-      if (coData.MST1_Q1 && student.MST1_Q1) totals[coData.MST1_Q1] += student.MST1_Q1;
-      if (coData.MST1_Q2 && student.MST1_Q2) totals[coData.MST1_Q2] += student.MST1_Q2;
-      if (coData.MST1_Q3 && student.MST1_Q3) totals[coData.MST1_Q3] += student.MST1_Q3;
+      if (coData.MST1_Q1 && student.MST1_Q1 != null) totals[coData.MST1_Q1] = (totals[coData.MST1_Q1] || 0) + parseFloat(student.MST1_Q1);
+      if (coData.MST1_Q2 && student.MST1_Q2 != null) totals[coData.MST1_Q2] = (totals[coData.MST1_Q2] || 0) + parseFloat(student.MST1_Q2);
+      if (coData.MST1_Q3 && student.MST1_Q3 != null) totals[coData.MST1_Q3] = (totals[coData.MST1_Q3] || 0) + parseFloat(student.MST1_Q3);
 
       return totals;
     };
 
-    // Initialize grand totals
+    // Initialize grand totals and counts
     const grandTotals = {};
-    mappedCOs.forEach(co => grandTotals[co] = 0);
+    const counts = {};
+    mappedCOs.forEach(co => {
+      grandTotals[co] = 0;
+      counts[co] = 0;
+    });
 
     // Add rows for each student with their scores
     studentScores.forEach((student) => {
       const coTotals = calculateCOTotals(student);
       
-      // Add to grand totals
-      mappedCOs.forEach(co => grandTotals[co] += coTotals[co]);
+      // Add to grand totals and counts
+      mappedCOs.forEach(co => {
+        if (coTotals[co] != null) {
+          grandTotals[co] += coTotals[co];
+          counts[co]++;
+        }
+      });
 
       worksheet.addRow({
         enrollment: student.id,
         name: student.name,
-        q1: student.MST1_Q1 || 0,
-        q2: student.MST1_Q2 || 0,
-        q3: student.MST1_Q3 || 0,
+        q1: student.MST1_Q1 != null ? parseFloat(student.MST1_Q1) : '',
+        q2: student.MST1_Q2 != null ? parseFloat(student.MST1_Q2) : '',
+        q3: student.MST1_Q3 != null ? parseFloat(student.MST1_Q3) : '',
         ...coTotals
       });
     });
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = grandTotals[co] / studentCount);
+    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.round(grandTotals[co] / counts[co]) : null);
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
@@ -320,7 +326,7 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
     studentScores.forEach(student => {
       const coTotals = calculateCOTotals(student);
       mappedCOs.forEach(co => {
-        if (coTotals[co] >= averages[co]) {
+        if (coTotals[co] != null && coTotals[co] >= averages[co]) {
           studentsAboveTarget[co]++;
         }
       });
@@ -388,7 +394,6 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
   }
 });
 
-
 router.get('/downloadmst2/:subjectCode', async (req, res) => {
   const { subjectCode } = req.params;
 
@@ -439,48 +444,56 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
     // Function to calculate CO totals for a student
     const calculateCOTotals = (student) => {
       const totals = {};
-      mappedCOs.forEach(co => {
-        totals[co] = 0;
-      });
+      mappedCOs.forEach(co => totals[co] = null);
 
-      if (coData.MST2_Q1 === coData.MST2_Q1) totals[coData.MST2_Q1] += student.MST2_Q1 || 0;
-      if (coData.MST2_Q2 === coData.MST2_Q2) totals[coData.MST2_Q2] += student.MST2_Q2 || 0;
-      if (coData.MST2_Q3 === coData.MST2_Q3) totals[coData.MST2_Q3] += student.MST2_Q3 || 0;
+      if (coData.MST2_Q1 && student.MST2_Q1 != null) totals[coData.MST2_Q1] = (totals[coData.MST2_Q1] || 0) + parseFloat(student.MST2_Q1);
+      if (coData.MST2_Q2 && student.MST2_Q2 != null) totals[coData.MST2_Q2] = (totals[coData.MST2_Q2] || 0) + parseFloat(student.MST2_Q2);
+      if (coData.MST2_Q3 && student.MST2_Q3 != null) totals[coData.MST2_Q3] = (totals[coData.MST2_Q3] || 0) + parseFloat(student.MST2_Q3);
 
       return totals;
     };
 
-    // Add student data rows
-    studentScores.forEach(student => {
+    // Initialize grand totals and counts
+    const grandTotals = {};
+    const counts = {};
+    mappedCOs.forEach(co => {
+      grandTotals[co] = 0;
+      counts[co] = 0;
+    });
+
+    // Add rows for each student with their scores
+    studentScores.forEach((student) => {
       const coTotals = calculateCOTotals(student);
+      
+      // Add to grand totals and counts
+      mappedCOs.forEach(co => {
+        if (coTotals[co] != null) {
+          grandTotals[co] += coTotals[co];
+          counts[co]++;
+        }
+      });
+
       worksheet.addRow({
         enrollment: student.id,
         name: student.name,
-        q1: student.MST2_Q1 || 0,
-        q2: student.MST2_Q2 || 0,
-        q3: student.MST2_Q3 || 0,
+        q1: student.MST2_Q1 != null ? parseFloat(student.MST2_Q1) : '',
+        q2: student.MST2_Q2 != null ? parseFloat(student.MST2_Q2) : '',
+        q3: student.MST2_Q3 != null ? parseFloat(student.MST2_Q3) : '',
         ...coTotals
       });
     });
 
-    // Calculate target marks (average)
-    const targetMarks = {};
-    mappedCOs.forEach(co => {
-      const total = studentScores.reduce((sum, student) => {
-        const totals = calculateCOTotals(student);
-        return sum + totals[co];
-      }, 0);
-      targetMarks[co] = total / studentCount;
-    });
+    // Calculate and add averages row
+    const averages = {};
+    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.round(grandTotals[co] / counts[co]) : null);
 
-    // Add target marks row
     const targetRow = worksheet.addRow({
-      enrollment: 'Target Marks',
+      enrollment: 'Average (Target Marks)',
       name: '',
       q1: '',
       q2: '',
       q3: '',
-      ...targetMarks
+      ...averages
     });
 
     targetRow.font = { bold: true };
@@ -490,17 +503,22 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
       fgColor: { argb: 'FFFFD700' }
     };
 
-    // Count students above target for each CO
+    // Count students above target
     const studentsAboveTarget = {};
-    mappedCOs.forEach(co => {
-      studentsAboveTarget[co] = studentScores.filter(student => {
-        const totals = calculateCOTotals(student);
-        return totals[co] >= targetMarks[co];
-      }).length;
+    mappedCOs.forEach(co => studentsAboveTarget[co] = 0);
+
+    studentScores.forEach(student => {
+      const coTotals = calculateCOTotals(student);
+      mappedCOs.forEach(co => {
+        if (coTotals[co] != null && coTotals[co] >= averages[co]) {
+          studentsAboveTarget[co]++;
+        }
+      });
     });
 
+    // Add students above target row
     worksheet.addRow({
-      enrollment: 'Students >= Target',
+      enrollment: 'Students >= Target Marks',
       name: '',
       q1: '',
       q2: '',
@@ -508,7 +526,7 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
       ...studentsAboveTarget
     });
 
-    // Calculate percentages
+    // Calculate and add percentages row
     const percentages = {};
     mappedCOs.forEach(co => {
       percentages[co] = `${((studentsAboveTarget[co] / studentCount) * 100).toFixed(2)}%`;
@@ -705,30 +723,36 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
       worksheet.addRow({
         id: sheet.id,
         name: sheet.name,
-        co1: sheet.EndSem_Q1 || 0,
-        co2: sheet.EndSem_Q2 || 0,
-        co3: sheet.EndSem_Q3 || 0,
-        co4: sheet.EndSem_Q4 || 0,
-        co5: sheet.EndSem_Q5 || 0,
+        co1: sheet.EndSem_Q1 != null ? parseFloat(sheet.EndSem_Q1) : '',
+        co2: sheet.EndSem_Q2 != null ? parseFloat(sheet.EndSem_Q2) : '',
+        co3: sheet.EndSem_Q3 != null ? parseFloat(sheet.EndSem_Q3) : '',
+        co4: sheet.EndSem_Q4 != null ? parseFloat(sheet.EndSem_Q4) : '',
+        co5: sheet.EndSem_Q5 != null ? parseFloat(sheet.EndSem_Q5) : '',
       });
     });
 
     // Calculate target marks (averages)
-    const totalRows = sheets.length;
+    const calculateAverage = (values) => {
+      const validValues = values.filter(value => value != null);
+      const sum = validValues.reduce((acc, value) => acc + parseFloat(value), 0);
+      return validValues.length ? Math.round(sum / validValues.length) : '';
+    };
+
     const targetMarks = {
       id: 'Target Marks',
       name: '',
-      co1: sheets.reduce((sum, sheet) => sum + (sheet.EndSem_Q1 || 0), 0) / totalRows,
-      co2: sheets.reduce((sum, sheet) => sum + (sheet.EndSem_Q2 || 0), 0) / totalRows,
-      co3: sheets.reduce((sum, sheet) => sum + (sheet.EndSem_Q3 || 0), 0) / totalRows,
-      co4: sheets.reduce((sum, sheet) => sum + (sheet.EndSem_Q4 || 0), 0) / totalRows,
-      co5: sheets.reduce((sum, sheet) => sum + (sheet.EndSem_Q5 || 0), 0) / totalRows,
+      co1: calculateAverage(sheets.map(sheet => sheet.EndSem_Q1)),
+      co2: calculateAverage(sheets.map(sheet => sheet.EndSem_Q2)),
+      co3: calculateAverage(sheets.map(sheet => sheet.EndSem_Q3)),
+      co4: calculateAverage(sheets.map(sheet => sheet.EndSem_Q4)),
+      co5: calculateAverage(sheets.map(sheet => sheet.EndSem_Q5)),
     };
 
     // Calculate CO levels
     const calculateCOLevel = (scores, targetMark) => {
+      if (targetMark === '') return '';
       const totalStudents = scores.length;
-      const studentsAboveTarget = scores.filter(score => (score || 0) >= targetMark).length;
+      const studentsAboveTarget = scores.filter(score => (score != null && parseFloat(score) >= targetMark)).length;
       const percentage = (studentsAboveTarget / totalStudents) * 100;
 
       if (percentage >= 70) return 3;
@@ -740,11 +764,11 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
     const coLevels = {
       id: 'CO Level',
       name: '',
-      co1: calculateCOLevel(sheets.map(s => s.EndSem_Q1), targetMarks.co1),
-      co2: calculateCOLevel(sheets.map(s => s.EndSem_Q2), targetMarks.co2),
-      co3: calculateCOLevel(sheets.map(s => s.EndSem_Q3), targetMarks.co3),
-      co4: calculateCOLevel(sheets.map(s => s.EndSem_Q4), targetMarks.co4),
-      co5: calculateCOLevel(sheets.map(s => s.EndSem_Q5), targetMarks.co5),
+      co1: targetMarks.co1 !== '' ? calculateCOLevel(sheets.map(s => s.EndSem_Q1), targetMarks.co1) : '',
+      co2: targetMarks.co2 !== '' ? calculateCOLevel(sheets.map(s => s.EndSem_Q2), targetMarks.co2) : '',
+      co3: targetMarks.co3 !== '' ? calculateCOLevel(sheets.map(s => s.EndSem_Q3), targetMarks.co3) : '',
+      co4: targetMarks.co4 !== '' ? calculateCOLevel(sheets.map(s => s.EndSem_Q4), targetMarks.co4) : '',
+      co5: targetMarks.co5 !== '' ? calculateCOLevel(sheets.map(s => s.EndSem_Q5), targetMarks.co5) : '',
     };
 
     // Add target marks row
@@ -760,11 +784,11 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
     const studentsAboveTarget = {
       id: 'Students Above Target',
       name: '',
-      co1: sheets.filter(s => (s.EndSem_Q1 || 0) >= targetMarks.co1).length,
-      co2: sheets.filter(s => (s.EndSem_Q2 || 0) >= targetMarks.co2).length,
-      co3: sheets.filter(s => (s.EndSem_Q3 || 0) >= targetMarks.co3).length,
-      co4: sheets.filter(s => (s.EndSem_Q4 || 0) >= targetMarks.co4).length,
-      co5: sheets.filter(s => (s.EndSem_Q5 || 0) >= targetMarks.co5).length,
+      co1: targetMarks.co1 !== '' ? sheets.filter(s => (s.EndSem_Q1 != null && parseFloat(s.EndSem_Q1) >= targetMarks.co1)).length : '',
+      co2: targetMarks.co2 !== '' ? sheets.filter(s => (s.EndSem_Q2 != null && parseFloat(s.EndSem_Q2) >= targetMarks.co2)).length : '',
+      co3: targetMarks.co3 !== '' ? sheets.filter(s => (s.EndSem_Q3 != null && parseFloat(s.EndSem_Q3) >= targetMarks.co3)).length : '',
+      co4: targetMarks.co4 !== '' ? sheets.filter(s => (s.EndSem_Q4 != null && parseFloat(s.EndSem_Q4) >= targetMarks.co4)).length : '',
+      co5: targetMarks.co5 !== '' ? sheets.filter(s => (s.EndSem_Q5 != null && parseFloat(s.EndSem_Q5) >= targetMarks.co5)).length : '',
     };
 
     // Add students above target row
@@ -854,11 +878,11 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
       worksheet.addRow({
         id: sheet.id,
         name: sheet.name,
-        co1: sheet.Assignment_CO1 || 0,
-        co2: sheet.Assignment_CO2 || 0,
-        co3: sheet.Assignment_CO3 || 0,
-        co4: sheet.Assignment_CO4 || 0,
-        co5: sheet.Assignment_CO5 || 0,
+        co1: sheet.Assignment_CO1 != null ? parseFloat(sheet.Assignment_CO1) : '',
+        co2: sheet.Assignment_CO2 != null ? parseFloat(sheet.Assignment_CO2) : '',
+        co3: sheet.Assignment_CO3 != null ? parseFloat(sheet.Assignment_CO3) : '',
+        co4: sheet.Assignment_CO4 != null ? parseFloat(sheet.Assignment_CO4) : '',
+        co5: sheet.Assignment_CO5 != null ? parseFloat(sheet.Assignment_CO5) : '',
       });
     });
 
@@ -867,17 +891,18 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
     const targetMarks = {
       id: 'Target Marks',
       name: '',
-      co1: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 || 0), 0) / totalRows,
-      co2: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 || 0), 0) / totalRows,
-      co3: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 || 0), 0) / totalRows,
-      co4: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 || 0), 0) / totalRows,
-      co5: sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 || 0), 0) / totalRows,
+      co1: sheets.some(sheet => sheet.Assignment_CO1 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 != null ? parseFloat(sheet.Assignment_CO1) : 0), 0) / totalRows) : '',
+      co2: sheets.some(sheet => sheet.Assignment_CO2 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 != null ? parseFloat(sheet.Assignment_CO2) : 0), 0) / totalRows) : '',
+      co3: sheets.some(sheet => sheet.Assignment_CO3 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 != null ? parseFloat(sheet.Assignment_CO3) : 0), 0) / totalRows) : '',
+      co4: sheets.some(sheet => sheet.Assignment_CO4 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 != null ? parseFloat(sheet.Assignment_CO4) : 0), 0) / totalRows) : '',
+      co5: sheets.some(sheet => sheet.Assignment_CO5 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 != null ? parseFloat(sheet.Assignment_CO5) : 0), 0) / totalRows) : '',
     };
 
     // Calculate CO levels
     const calculateCOLevel = (scores, targetMark) => {
+      if (targetMark === '') return '';
       const totalStudents = scores.length;
-      const studentsAboveTarget = scores.filter(score => (score || 0) >= targetMark).length;
+      const studentsAboveTarget = scores.filter(score => (score != null && parseFloat(score) >= targetMark)).length;
       const percentage = (studentsAboveTarget / totalStudents) * 100;
 
       if (percentage >= 70) return 3;
@@ -889,11 +914,11 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
     const coLevels = {
       id: 'CO Level',
       name: '',
-      co1: calculateCOLevel(sheets.map(s => s.Assignment_CO1), targetMarks.co1),
-      co2: calculateCOLevel(sheets.map(s => s.Assignment_CO2), targetMarks.co2),
-      co3: calculateCOLevel(sheets.map(s => s.Assignment_CO3), targetMarks.co3),
-      co4: calculateCOLevel(sheets.map(s => s.Assignment_CO4), targetMarks.co4),
-      co5: calculateCOLevel(sheets.map(s => s.Assignment_CO5), targetMarks.co5),
+      co1: targetMarks.co1 !== '' ? calculateCOLevel(sheets.map(s => s.Assignment_CO1), targetMarks.co1) : '',
+      co2: targetMarks.co2 !== '' ? calculateCOLevel(sheets.map(s => s.Assignment_CO2), targetMarks.co2) : '',
+      co3: targetMarks.co3 !== '' ? calculateCOLevel(sheets.map(s => s.Assignment_CO3), targetMarks.co3) : '',
+      co4: targetMarks.co4 !== '' ? calculateCOLevel(sheets.map(s => s.Assignment_CO4), targetMarks.co4) : '',
+      co5: targetMarks.co5 !== '' ? calculateCOLevel(sheets.map(s => s.Assignment_CO5), targetMarks.co5) : '',
     };
 
     // Add target marks row
@@ -909,11 +934,11 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
     const studentsAboveTarget = {
       id: 'Students Above Target',
       name: '',
-      co1: sheets.filter(s => (s.Assignment_CO1 || 0) >= targetMarks.co1).length,
-      co2: sheets.filter(s => (s.Assignment_CO2 || 0) >= targetMarks.co2).length,
-      co3: sheets.filter(s => (s.Assignment_CO3 || 0) >= targetMarks.co3).length,
-      co4: sheets.filter(s => (s.Assignment_CO4 || 0) >= targetMarks.co4).length,
-      co5: sheets.filter(s => (s.Assignment_CO5 || 0) >= targetMarks.co5).length,
+      co1: targetMarks.co1 !== '' ? sheets.filter(s => (s.Assignment_CO1 != null && parseFloat(s.Assignment_CO1) >= targetMarks.co1)).length : '',
+      co2: targetMarks.co2 !== '' ? sheets.filter(s => (s.Assignment_CO2 != null && parseFloat(s.Assignment_CO2) >= targetMarks.co2)).length : '',
+      co3: targetMarks.co3 !== '' ? sheets.filter(s => (s.Assignment_CO3 != null && parseFloat(s.Assignment_CO3) >= targetMarks.co3)).length : '',
+      co4: targetMarks.co4 !== '' ? sheets.filter(s => (s.Assignment_CO4 != null && parseFloat(s.Assignment_CO4) >= targetMarks.co4)).length : '',
+      co5: targetMarks.co5 !== '' ? sheets.filter(s => (s.Assignment_CO5 != null && parseFloat(s.Assignment_CO5) >= targetMarks.co5)).length : '',
     };
 
     // Add students above target row
@@ -963,7 +988,6 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
   }
 });
 
-
 // Helper function to calculate MST scores for a specific CO
 const calculateMSTScores = (sheets, coMappings) => {
   const scores = {
@@ -974,24 +998,24 @@ const calculateMSTScores = (sheets, coMappings) => {
   sheets.forEach(sheet => {
     // MST1
     if (sheet.MST1_Q1) {
-      scores.MST1[coMappings.MST1_Q1] = (scores.MST1[coMappings.MST1_Q1] || 0) + sheet.MST1_Q1;
+      scores.MST1[coMappings.MST1_Q1] = (scores.MST1[coMappings.MST1_Q1] || 0) + parseFloat(sheet.MST1_Q1);
     }
     if (sheet.MST1_Q2) {
-      scores.MST1[coMappings.MST1_Q2] = (scores.MST1[coMappings.MST1_Q2] || 0) + sheet.MST1_Q2;
+      scores.MST1[coMappings.MST1_Q2] = (scores.MST1[coMappings.MST1_Q2] || 0) + parseFloat(sheet.MST1_Q2);
     }
     if (sheet.MST1_Q3) {
-      scores.MST1[coMappings.MST1_Q3] = (scores.MST1[coMappings.MST1_Q3] || 0) + sheet.MST1_Q3;
+      scores.MST1[coMappings.MST1_Q3] = (scores.MST1[coMappings.MST1_Q3] || 0) + parseFloat(sheet.MST1_Q3);
     }
     
     // MST2
     if (sheet.MST2_Q1) {
-      scores.MST2[coMappings.MST2_Q1] = (scores.MST2[coMappings.MST2_Q1] || 0) + sheet.MST2_Q1;
+      scores.MST2[coMappings.MST2_Q1] = (scores.MST2[coMappings.MST2_Q1] || 0) + parseFloat(sheet.MST2_Q1);
     }
     if (sheet.MST2_Q2) {
-      scores.MST2[coMappings.MST2_Q2] = (scores.MST2[coMappings.MST2_Q2] || 0) + sheet.MST2_Q2;
+      scores.MST2[coMappings.MST2_Q2] = (scores.MST2[coMappings.MST2_Q2] || 0) + parseFloat(sheet.MST2_Q2);
     }
     if (sheet.MST2_Q3) {
-      scores.MST2[coMappings.MST2_Q3] = (scores.MST2[coMappings.MST2_Q3] || 0) + sheet.MST2_Q3;
+      scores.MST2[coMappings.MST2_Q3] = (scores.MST2[coMappings.MST2_Q3] || 0) + parseFloat(sheet.MST2_Q3);
     }
   });
   
@@ -1003,11 +1027,11 @@ const calculateQuizScores = (sheets) => {
   const scores = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
   
   sheets.forEach(sheet => {
-    if (sheet.Assignment_CO1) scores.CO1 += sheet.Assignment_CO1;
-    if (sheet.Assignment_CO2) scores.CO2 += sheet.Assignment_CO2;
-    if (sheet.Assignment_CO3) scores.CO3 += sheet.Assignment_CO3;
-    if (sheet.Assignment_CO4) scores.CO4 += sheet.Assignment_CO4;
-    if (sheet.Assignment_CO5) scores.CO5 += sheet.Assignment_CO5;
+    if (sheet.Assignment_CO1) scores.CO1 += parseFloat(sheet.Assignment_CO1);
+    if (sheet.Assignment_CO2) scores.CO2 += parseFloat(sheet.Assignment_CO2);
+    if (sheet.Assignment_CO3) scores.CO3 += parseFloat(sheet.Assignment_CO3);
+    if (sheet.Assignment_CO4) scores.CO4 += parseFloat(sheet.Assignment_CO4);
+    if (sheet.Assignment_CO5) scores.CO5 += parseFloat(sheet.Assignment_CO5);
   });
   
   return scores;
@@ -1024,11 +1048,11 @@ const calculateEndSemScores = (sheets) => {
   };
   
   sheets.forEach(sheet => {
-    if (sheet.EndSem_Q1) scores.CO1 += sheet.EndSem_Q1;
-    if (sheet.EndSem_Q2) scores.CO2 += sheet.EndSem_Q2;
-    if (sheet.EndSem_Q3) scores.CO3 += sheet.EndSem_Q3;
-    if (sheet.EndSem_Q4) scores.CO4 += sheet.EndSem_Q4;
-    if (sheet.EndSem_Q5) scores.CO5 += sheet.EndSem_Q5;
+    if (sheet.EndSem_Q1) scores.CO1 += parseFloat(sheet.EndSem_Q1);
+    if (sheet.EndSem_Q2) scores.CO2 += parseFloat(sheet.EndSem_Q2);
+    if (sheet.EndSem_Q3) scores.CO3 += parseFloat(sheet.EndSem_Q3);
+    if (sheet.EndSem_Q4) scores.CO4 += parseFloat(sheet.EndSem_Q4);
+    if (sheet.EndSem_Q5) scores.CO5 += parseFloat(sheet.EndSem_Q5);
   });
   
   return scores;

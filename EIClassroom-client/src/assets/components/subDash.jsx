@@ -11,11 +11,19 @@ const SubDash = () => {
   const { subjectCode } = useParams();
   const [create, setCreate] = useState(false);
   const [schema, setSchema] = useState(false);
+  const navigate = useNavigate();
+
   return (
     <div className="w-full min-h-screen h-full pb-12 poppins">
       {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} />}
       {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} />}
       <div>
+        <button
+          className="bg-gray-200 dark:bg-gray-800 text-black dark:text-white px-4 py-2 rounded"
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </button>
         <h1 className='text-3xl font-bold dark:text-white pt-6 text-center'>{subjectCode}</h1>
         
         {/* Add Data Section */}
@@ -24,7 +32,7 @@ const SubDash = () => {
           <IoMdPersonAdd className='mr-2 text-violet-600'/>
             <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Add Data</span>
           </h2>
-          <div className='flex justify-center gap-4'>
+          <div className='flex justify-start gap-4'>
             <button 
               className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
               onClick={() => setSchema(true)}
@@ -41,7 +49,7 @@ const SubDash = () => {
         </div>
 
         {/* Excel Sheets Section */}
-        <div className='px-4 mx-2 w-11/12'>
+        <div className='px-4 pt-4 mx-2 w-11/12'>
           <h2 className='text-lg font-semibold dark:text-white mb-2 flex items-center'>
           <IoStatsChart className='mr-2 text-violet-600'/>
             <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Excel Sheets</span>
@@ -392,7 +400,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
         ...prevData,
         [section.toLowerCase()]: {
           ...prevData[section.toLowerCase()],
-          [key]: value,
+          [key]: parseFloat(value), // Ensure the value is parsed as a float
         },
       }));
     } else {
@@ -469,7 +477,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst1_Q1"
                     value={formData.mst1.Q1}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -481,7 +488,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst1_Q2"
                     value={formData.mst1.Q2}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -493,7 +499,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst1_Q3"
                     value={formData.mst1.Q3}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -511,7 +516,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst2_Q1"
                     value={formData.mst2.Q1}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -523,7 +527,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst2_Q2"
                     value={formData.mst2.Q2}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -535,7 +538,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="mst2_Q3"
                     value={formData.mst2.Q3}
                     onChange={handleChange}
-                    required
                     className="w-full mx-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -553,7 +555,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO1"
                     value={formData.assignment.CO1}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -565,7 +566,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO2"
                     value={formData.assignment.CO2}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -577,7 +577,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO3"
                     value={formData.assignment.CO3}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -589,7 +588,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO4"
                     value={formData.assignment.CO4}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -601,7 +599,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="assignment_CO5"
                     value={formData.assignment.CO5}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -619,7 +616,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q1"
                     value={formData.endsem.Q1}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -631,7 +627,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q2"
                     value={formData.endsem.Q2}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -643,7 +638,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q3"
                     value={formData.endsem.Q3}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -655,7 +649,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q4"
                     value={formData.endsem.Q4}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
@@ -667,7 +660,6 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
                     id="endSem_Q5"
                     value={formData.endsem.Q5}
                     onChange={handleChange}
-                    required
                     className="w-full mr-1 px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
                   />
                 </div>

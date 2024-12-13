@@ -16,6 +16,7 @@ const Signin = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
   const [loading, setLoading] = useState(true); // Loading state
+  const [buttonLoading, setButtonLoading] = useState(false); // Button loading state
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -52,6 +53,7 @@ const Signin = () => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setButtonLoading(true); // Set button loading state to true
 
     try {
       const response = await axios.post(`https://ei-deprecated.onrender.com/api/auth/signin`, formData);
@@ -75,6 +77,8 @@ const Signin = () => {
       } else {
         setError("Something went wrong. Please try again.");
       }
+    } finally {
+      setButtonLoading(false); // Set button loading state to false
     }
   };
 
@@ -137,10 +141,15 @@ const Signin = () => {
           {success && <p className="text-green-500 text-center pb-2">{success}</p>}
 
           <button
-            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] flex items-center justify-center"
             type="submit"
+            disabled={buttonLoading} // Disable button when loading
           >
-            Sign in &rarr;
+            {buttonLoading ? (
+              <Loader /> // Loader component
+            ) : (
+              "Sign in →"
+            )}
             <BottomGradient />
           </button>
 
@@ -202,6 +211,29 @@ const BottomGradient = () => {
       <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
       <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
     </>
+  );
+};
+
+// Loader component
+const Loader = () => {
+  return (
+    <div className="loader">
+      <style jsx>{`
+        .loader {
+          border: 4px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top: 4px solid #fff;
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
   );
 };
 
