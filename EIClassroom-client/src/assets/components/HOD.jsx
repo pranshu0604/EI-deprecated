@@ -20,6 +20,7 @@ const HOD = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [creds,setCreds] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -35,6 +36,13 @@ const HOD = () => {
     };
 
     fetchSubjects();
+  }, []);
+
+  useEffect(() => {
+    const isHOD = localStorage.getItem("HOD");
+    if (isHOD) {
+      setCreds(false);
+    }
   }, []);
 
   if (loading) {
@@ -59,7 +67,6 @@ const HOD = () => {
       <div className=" text-5xl flex justify-center items-center poppins-semibold pt-28 pb-3 dark:text-white">
         HOD Dashboard
       </div>
-
       <div className="grid justify-center">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
           {subjects.map((subject) => (
@@ -121,6 +128,7 @@ const Credentials = ({creds,setCreds}) => {
       if(formData.email=='rajeshkhatri1@rediffmail.com' && formData.password=='EIServerHOD@27'){
           console.log(formData)
           setSuccess("Sign-in successful!");
+          localStorage.setItem("HOD",true);
           setCreds(false)
       }else{
           setError("Invalid email or password.");

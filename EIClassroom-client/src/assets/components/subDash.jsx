@@ -11,11 +11,19 @@ const SubDash = () => {
   const { subjectCode } = useParams();
   const [create, setCreate] = useState(false);
   const [schema, setSchema] = useState(false);
+  const navigate = useNavigate();
+
   return (
     <div className="w-full min-h-screen h-full pb-12 poppins">
       {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} />}
       {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} />}
       <div>
+        <button
+          className="bg-gray-200 dark:bg-gray-800 text-black dark:text-white px-4 py-2 rounded"
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </button>
         <h1 className='text-3xl font-bold dark:text-white pt-6 text-center'>{subjectCode}</h1>
         
         {/* Add Data Section */}
