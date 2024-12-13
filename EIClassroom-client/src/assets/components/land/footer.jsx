@@ -12,7 +12,7 @@ export default function Footer(){
                             src="/GS LOGO.png" alt="logo"></img>
                         <div className="ml-4">
                             <div className="text-2xl text-white text-nowrap">
-                                EI Classroom Portal
+                                EI Department LMS
                                 </div>
                                 <div className="text-xl text-white font-thin md:text-nowrap">
                                     Shri G. S. Institute of Tech. and Science
@@ -70,15 +70,6 @@ export default function Footer(){
                             className="ml-4 text-sm text-gray-400 sm:text-center"
                             >
                             Pranshu Pandey
-                        </LinkPreview>
-                        <LinkPreview 
-                            url="https://www.linkedin.com/in/anuj-mishra-4330672b6/"
-                            target="_blank"
-                            imageSrc="cmg.png"
-                            isStatic
-                            className="ml-4 text-sm text-gray-400 sm:text-center"
-                            >
-                            Anuj Mishra
                         </LinkPreview>
                         </div>
                     </div>
