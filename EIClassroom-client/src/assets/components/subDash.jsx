@@ -392,7 +392,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
         ...prevData,
         [section.toLowerCase()]: {
           ...prevData[section.toLowerCase()],
-          [key]: value,
+          [key]: parseFloat(value), // Ensure the value is parsed as a float
         },
       }));
     } else {

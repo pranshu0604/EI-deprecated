@@ -86,22 +86,22 @@ router.post('/submit-form', async (req, res) => {
         name,
         subjectCode,
         teacherId: subject.teacher.id, // Dynamically connect teacher through subjectCode
-        MST1_Q1: parseInt(MST1_Q1),
-        MST1_Q2: parseInt(MST1_Q2),
-        MST1_Q3: parseInt(MST1_Q3),
-        MST2_Q1: parseInt(MST2_Q1),
-        MST2_Q2: parseInt(MST2_Q2),
-        MST2_Q3: parseInt(MST2_Q3),
-        EndSem_Q1: parseInt(EndSem_Q1),
-        EndSem_Q2: parseInt(EndSem_Q2),
-        EndSem_Q3: parseInt(EndSem_Q3),
-        EndSem_Q4: parseInt(EndSem_Q4),
-        EndSem_Q5: parseInt(EndSem_Q5),
-        Assignment_CO1: parseInt(Assignment_CO1),
-        Assignment_CO2: parseInt(Assignment_CO2),
-        Assignment_CO3: parseInt(Assignment_CO3),
-        Assignment_CO4: parseInt(Assignment_CO4),
-        Assignment_CO5: parseInt(Assignment_CO5),
+        MST1_Q1: parseFloat(MST1_Q1),
+        MST1_Q2: parseFloat(MST1_Q2),
+        MST1_Q3: parseFloat(MST1_Q3),
+        MST2_Q1: parseFloat(MST2_Q1),
+        MST2_Q2: parseFloat(MST2_Q2),
+        MST2_Q3: parseFloat(MST2_Q3),
+        EndSem_Q1: parseFloat(EndSem_Q1),
+        EndSem_Q2: parseFloat(EndSem_Q2),
+        EndSem_Q3: parseFloat(EndSem_Q3),
+        EndSem_Q4: parseFloat(EndSem_Q4),
+        EndSem_Q5: parseFloat(EndSem_Q5),
+        Assignment_CO1: parseFloat(Assignment_CO1),
+        Assignment_CO2: parseFloat(Assignment_CO2),
+        Assignment_CO3: parseFloat(Assignment_CO3),
+        Assignment_CO4: parseFloat(Assignment_CO4),
+        Assignment_CO5: parseFloat(Assignment_CO5),
       },
     });
 
@@ -265,9 +265,9 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
       const totals = {};
       mappedCOs.forEach(co => totals[co] = 0);
 
-      if (coData.MST1_Q1 && student.MST1_Q1) totals[coData.MST1_Q1] += student.MST1_Q1;
-      if (coData.MST1_Q2 && student.MST1_Q2) totals[coData.MST1_Q2] += student.MST1_Q2;
-      if (coData.MST1_Q3 && student.MST1_Q3) totals[coData.MST1_Q3] += student.MST1_Q3;
+      if (coData.MST1_Q1 && student.MST1_Q1) totals[coData.MST1_Q1] += parseFloat(student.MST1_Q1);
+      if (coData.MST1_Q2 && student.MST1_Q2) totals[coData.MST1_Q2] += parseFloat(student.MST1_Q2);
+      if (coData.MST1_Q3 && student.MST1_Q3) totals[coData.MST1_Q3] += parseFloat(student.MST1_Q3);
 
       return totals;
     };
@@ -286,16 +286,16 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
       worksheet.addRow({
         enrollment: student.id,
         name: student.name,
-        q1: student.MST1_Q1 || 0,
-        q2: student.MST1_Q2 || 0,
-        q3: student.MST1_Q3 || 0,
+        q1: parseFloat(student.MST1_Q1) || 0,
+        q2: parseFloat(student.MST1_Q2) || 0,
+        q3: parseFloat(student.MST1_Q3) || 0,
         ...coTotals
       });
     });
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = grandTotals[co] / studentCount);
+    mappedCOs.forEach(co => averages[co] = (grandTotals[co] / studentCount).toFixed(2));
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
