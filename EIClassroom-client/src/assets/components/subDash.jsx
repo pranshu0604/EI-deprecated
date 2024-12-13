@@ -79,6 +79,12 @@ const SubDash = () => {
               onClick={() => downloadCOSheet(subjectCode)}>
               CO Analysis
             </button>
+            <button 
+              className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadCOMatrix(subjectCode)}
+            >
+              CO Matrix
+            </button>
           </div>
         </div>
         <List subjectCode={subjectCode}/>
@@ -100,7 +106,7 @@ const List = ({ subjectCode }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`https://ei-deprecated.onrender.com/api/operation/sheets?subjectCode=${subjectCode}`);
+        const response = await axios.get(`http://localhost:8080/api/operation/sheets?subjectCode=${subjectCode}`);
         setSheets(response.data);
         setError(null);
         setLoading(false);
@@ -237,7 +243,7 @@ const List = ({ subjectCode }) => {
 
 const deleteStudent = async (id, subjectCode) => {
   if(window.confirm('Are you sure you want to delete this student?')){
-    const response = await axios.delete(`https://ei-deprecated.onrender.com/api/operation/sheets/${id}/${subjectCode}`);
+    const response = await axios.delete(`http://localhost:8080/api/operation/sheets/${id}/${subjectCode}`);
     console.log(response.data);
     window.location.reload();
   }
@@ -295,7 +301,7 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
     console.log('Data to Submit:', dataToSubmit); // Debug log to check the final form data
 
     try {
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/co-form`, dataToSubmit);
+      const response = await axios.post(`http://localhost:8080/api/operation/co-form`, dataToSubmit);
       alert('Form submitted successfully!');
       console.log(response.data);
       setSchema(false); // Optionally close the form
@@ -417,7 +423,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
     setError('');
 
     try {
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/submit-form`, formData, {
+      const response = await axios.post(`http://localhost:8080/api/operation/submit-form`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -679,7 +685,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
 
 
   const overallSheet = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -698,7 +704,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadMST1 = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst1/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/downloadmst1/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -717,7 +723,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadMST2 = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst2/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/downloadmst2/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -736,7 +742,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadEndSem = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/end-excel/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/end-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -754,7 +760,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadAssignment = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/assignment-excel/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/assignment-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -772,7 +778,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
   };
 
   const downloadCOSheet = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/generate-co-attainment/${subjectCode}`, {
+    axios.get(`http://localhost:8080/api/operation/generate-co-attainment/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -786,6 +792,24 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
     })
     .catch((error) => {
       console.error('Error downloading the Excel sheet:', error);
+    });
+  };
+
+  const downloadCOMatrix = (subjectCode) => {
+    axios.get(`http://localhost:8080/api/operation/co-matrix/${subjectCode}`, {
+      responseType: 'blob',
+    })
+    .then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `CO_Matrix_${subjectCode}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch((error) => {
+      console.error('Error downloading the CO matrix:', error);
     });
   };
 

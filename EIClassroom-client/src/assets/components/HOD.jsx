@@ -25,7 +25,7 @@ const HOD = () => {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get(`https://ei-deprecated.onrender.com/api/subjects/allsubjects`);
+        const response = await axios.get(`http://localhost:8080/api/subjects/allsubjects`);
         setSubjects(response.data);
       } catch (err) {
         setError("Failed to fetch subjects");
