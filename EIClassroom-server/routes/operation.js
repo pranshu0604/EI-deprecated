@@ -301,7 +301,7 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.round(grandTotals[co] / counts[co]) : null);
+    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.floor(grandTotals[co] / counts[co]) : null);
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
@@ -332,20 +332,20 @@ router.get('/downloadmst1/:subjectCode', async (req, res) => {
       });
     });
 
-    // Add students above target row
-    worksheet.addRow({
-      enrollment: 'Students >= Target Marks',
-      name: '',
-      q1: '',
-      q2: '',
-      q3: '',
-      ...studentsAboveTarget
-    });
-
     // Calculate and add percentages row
     const percentages = {};
     mappedCOs.forEach(co => {
-      percentages[co] = `${((studentsAboveTarget[co] / studentCount) * 100).toFixed(2)}%`;
+      // Only count students who have a non-null value for this CO
+      const validStudentCount = studentScores.filter(student => {
+        const coTotal = calculateCOTotals(student)[co];
+        return coTotal != null;
+      }).length;
+
+      if (validStudentCount > 0) {
+        percentages[co] = `${((studentsAboveTarget[co] / validStudentCount) * 100).toFixed(2)}%`;
+      } else {
+        percentages[co] = '';
+      }
     });
 
     worksheet.addRow({
@@ -485,7 +485,7 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
 
     // Calculate and add averages row
     const averages = {};
-    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.round(grandTotals[co] / counts[co]) : null);
+    mappedCOs.forEach(co => averages[co] = counts[co] ? Math.floor(grandTotals[co] / counts[co]) : null);
 
     const targetRow = worksheet.addRow({
       enrollment: 'Average (Target Marks)',
@@ -516,20 +516,20 @@ router.get('/downloadmst2/:subjectCode', async (req, res) => {
       });
     });
 
-    // Add students above target row
-    worksheet.addRow({
-      enrollment: 'Students >= Target Marks',
-      name: '',
-      q1: '',
-      q2: '',
-      q3: '',
-      ...studentsAboveTarget
-    });
-
     // Calculate and add percentages row
     const percentages = {};
     mappedCOs.forEach(co => {
-      percentages[co] = `${((studentsAboveTarget[co] / studentCount) * 100).toFixed(2)}%`;
+      // Only count students who have a non-null value for this CO
+      const validStudentCount = studentScores.filter(student => {
+        const coTotal = calculateCOTotals(student)[co];
+        return coTotal != null;
+      }).length;
+
+      if (validStudentCount > 0) {
+        percentages[co] = `${((studentsAboveTarget[co] / validStudentCount) * 100).toFixed(2)}%`;
+      } else {
+        percentages[co] = '';
+      }
     });
 
     worksheet.addRow({
@@ -719,7 +719,7 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
 
       if (validScores.length === 0) return '';
       
-      const average = Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length);
+      const average = Math.floor(validScores.reduce((sum, score) => sum + score, 0) / validScores.length);
       
       // Step 2: This average is our target score
       // Step 3: Calculate percentage based on ALL students
@@ -774,23 +774,37 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
       });
 
       if (studentCount > 0) {
-        // Calculate target (average)
-        const targetScore = Math.round(totalScore / studentCount);
+        const targetScore = Math.floor(totalScore / studentCount);
 
-        // Count students above target
+        // Count students above target, but only consider students who have valid scores
+        let validStudents = 0;
+        studentsAboveTarget = 0;
         sheets.forEach(student => {
           let coTotal = 0;
-          if (coMapping.MST1_Q1 === co && student.MST1_Q1 != null) coTotal += parseFloat(student.MST1_Q1);
-          if (coMapping.MST1_Q2 === co && student.MST1_Q2 != null) coTotal += parseFloat(student.MST1_Q2);
-          if (coMapping.MST1_Q3 === co && student.MST1_Q3 != null) coTotal += parseFloat(student.MST1_Q3);
+          let hasValidScore = false;
+          if (coMapping.MST1_Q1 === co && student.MST1_Q1 != null) {
+            coTotal += parseFloat(student.MST1_Q1);
+            hasValidScore = true;
+          }
+          if (coMapping.MST1_Q2 === co && student.MST1_Q2 != null) {
+            coTotal += parseFloat(student.MST1_Q2);
+            hasValidScore = true;
+          }
+          if (coMapping.MST1_Q3 === co && student.MST1_Q3 != null) {
+            coTotal += parseFloat(student.MST1_Q3);
+            hasValidScore = true;
+          }
           
-          if (coTotal >= targetScore) {
-            studentsAboveTarget++;
+          if (hasValidScore) {
+            validStudents++;
+            if (coTotal >= targetScore) {
+              studentsAboveTarget++;
+            }
           }
         });
 
-        // Calculate percentage and CO level
-        const percentage = (studentsAboveTarget / sheets.length) * 100;
+        // Calculate percentage using valid students count
+        const percentage = (studentsAboveTarget / validStudents) * 100;
         if (percentage >= 70) mst1Row[co.toLowerCase()] = 3;
         else if (percentage >= 60) mst1Row[co.toLowerCase()] = 2;
         else if (percentage >= 50) mst1Row[co.toLowerCase()] = 1;
@@ -820,20 +834,35 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
       });
 
       if (studentCount > 0) {
-        const targetScore = Math.round(totalScore / studentCount);
+        const targetScore = Math.floor(totalScore / studentCount);
 
+        let validStudents = 0;
+        studentsAboveTarget = 0;
         sheets.forEach(student => {
           let coTotal = 0;
-          if (coMapping.MST2_Q1 === co && student.MST2_Q1 != null) coTotal += parseFloat(student.MST2_Q1);
-          if (coMapping.MST2_Q2 === co && student.MST2_Q2 != null) coTotal += parseFloat(student.MST2_Q2);
-          if (coMapping.MST2_Q3 === co && student.MST2_Q3 != null) coTotal += parseFloat(student.MST2_Q3);
+          let hasValidScore = false;
+          if (coMapping.MST2_Q1 === co && student.MST2_Q1 != null) {
+            coTotal += parseFloat(student.MST2_Q1);
+            hasValidScore = true;
+          }
+          if (coMapping.MST2_Q2 === co && student.MST2_Q2 != null) {
+            coTotal += parseFloat(student.MST2_Q2);
+            hasValidScore = true;
+          }
+          if (coMapping.MST2_Q3 === co && student.MST2_Q3 != null) {
+            coTotal += parseFloat(student.MST2_Q3);
+            hasValidScore = true;
+          }
           
-          if (coTotal >= targetScore) {
-            studentsAboveTarget++;
+          if (hasValidScore) {
+            validStudents++;
+            if (coTotal >= targetScore) {
+              studentsAboveTarget++;
+            }
           }
         });
 
-        const percentage = (studentsAboveTarget / sheets.length) * 100;
+        const percentage = (studentsAboveTarget / validStudents) * 100;
         if (percentage >= 70) mst2Row[co.toLowerCase()] = 3;
         else if (percentage >= 60) mst2Row[co.toLowerCase()] = 2;
         else if (percentage >= 50) mst2Row[co.toLowerCase()] = 1;
@@ -859,16 +888,21 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
       });
 
       if (studentCount > 0) {
-        const targetScore = Math.round(totalScore / studentCount);
+        const targetScore = Math.floor(totalScore / studentCount);
 
+        let validStudents = 0;
+        studentsAboveTarget = 0;
         sheets.forEach(student => {
           const score = student[`Assignment_${co}`];
-          if (score != null && parseFloat(score) >= targetScore) {
-            studentsAboveTarget++;
+          if (score != null) {
+            validStudents++;
+            if (parseFloat(score) >= targetScore) {
+              studentsAboveTarget++;
+            }
           }
         });
 
-        const percentage = (studentsAboveTarget / sheets.length) * 100;
+        const percentage = (studentsAboveTarget / validStudents) * 100;
         if (percentage >= 70) assignmentRow[co.toLowerCase()] = 3;
         else if (percentage >= 60) assignmentRow[co.toLowerCase()] = 2;
         else if (percentage >= 50) assignmentRow[co.toLowerCase()] = 1;
@@ -894,16 +928,21 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
       });
 
       if (studentCount > 0) {
-        const targetScore = Math.round(totalScore / studentCount);
+        const targetScore = Math.floor(totalScore / studentCount);
 
+        let validStudents = 0;
+        studentsAboveTarget = 0;
         sheets.forEach(student => {
           const score = student[`EndSem_Q${index + 1}`];
-          if (score != null && parseFloat(score) >= targetScore) {
-            studentsAboveTarget++;
+          if (score != null) {
+            validStudents++;
+            if (parseFloat(score) >= targetScore) {
+              studentsAboveTarget++;
+            }
           }
         });
 
-        const percentage = (studentsAboveTarget / sheets.length) * 100;
+        const percentage = (studentsAboveTarget / validStudents) * 100;
         if (percentage >= 70) endSemRow[co.toLowerCase()] = 3;
         else if (percentage >= 60) endSemRow[co.toLowerCase()] = 2;
         else if (percentage >= 50) endSemRow[co.toLowerCase()] = 1;
@@ -1114,7 +1153,7 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
     const calculateAverage = (values) => {
       const validValues = values.filter(value => value != null);
       const sum = validValues.reduce((acc, value) => acc + parseFloat(value), 0);
-      return validValues.length ? Math.round(sum / validValues.length) : '';
+      return validValues.length ? Math.floor(sum / validValues.length) : '';
     };
 
     const targetMarks = {
@@ -1130,8 +1169,9 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
     // Calculate CO levels
     const calculateCOLevel = (scores, targetMark) => {
       if (targetMark === '') return '';
-      const totalStudents = scores.length;
-      const studentsAboveTarget = scores.filter(score => (score != null && parseFloat(score) >= targetMark)).length;
+      const validScores = scores.filter(score => score != null);
+      const totalStudents = validScores.length; // Only count students with valid scores
+      const studentsAboveTarget = validScores.filter(score => parseFloat(score) >= targetMark).length;
       const percentage = (studentsAboveTarget / totalStudents) * 100;
 
       if (percentage >= 70) return 3;
@@ -1163,11 +1203,11 @@ router.get('/end-excel/:subjectCode', async (req, res) => {
     const studentsAboveTarget = {
       id: 'Students Above Target',
       name: '',
-      co1: targetMarks.co1 !== '' ? sheets.filter(s => (s.EndSem_Q1 != null && parseFloat(s.EndSem_Q1) >= targetMarks.co1)).length : '',
-      co2: targetMarks.co2 !== '' ? sheets.filter(s => (s.EndSem_Q2 != null && parseFloat(s.EndSem_Q2) >= targetMarks.co2)).length : '',
-      co3: targetMarks.co3 !== '' ? sheets.filter(s => (s.EndSem_Q3 != null && parseFloat(s.EndSem_Q3) >= targetMarks.co3)).length : '',
-      co4: targetMarks.co4 !== '' ? sheets.filter(s => (s.EndSem_Q4 != null && parseFloat(s.EndSem_Q4) >= targetMarks.co4)).length : '',
-      co5: targetMarks.co5 !== '' ? sheets.filter(s => (s.EndSem_Q5 != null && parseFloat(s.EndSem_Q5) >= targetMarks.co5)).length : '',
+      co1: targetMarks.co1 !== '' ? sheets.filter(s => s.EndSem_Q1 != null && parseFloat(s.EndSem_Q1) >= targetMarks.co1).length : '',
+      co2: targetMarks.co2 !== '' ? sheets.filter(s => s.EndSem_Q2 != null && parseFloat(s.EndSem_Q2) >= targetMarks.co2).length : '',
+      co3: targetMarks.co3 !== '' ? sheets.filter(s => s.EndSem_Q3 != null && parseFloat(s.EndSem_Q3) >= targetMarks.co3).length : '',
+      co4: targetMarks.co4 !== '' ? sheets.filter(s => s.EndSem_Q4 != null && parseFloat(s.EndSem_Q4) >= targetMarks.co4).length : '',
+      co5: targetMarks.co5 !== '' ? sheets.filter(s => s.EndSem_Q5 != null && parseFloat(s.EndSem_Q5) >= targetMarks.co5).length : '',
     };
 
     // Add students above target row
@@ -1270,18 +1310,29 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
     const targetMarks = {
       id: 'Target Marks',
       name: '',
-      co1: sheets.some(sheet => sheet.Assignment_CO1 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 != null ? parseFloat(sheet.Assignment_CO1) : 0), 0) / totalRows) : '',
-      co2: sheets.some(sheet => sheet.Assignment_CO2 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 != null ? parseFloat(sheet.Assignment_CO2) : 0), 0) / totalRows) : '',
-      co3: sheets.some(sheet => sheet.Assignment_CO3 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 != null ? parseFloat(sheet.Assignment_CO3) : 0), 0) / totalRows) : '',
-      co4: sheets.some(sheet => sheet.Assignment_CO4 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 != null ? parseFloat(sheet.Assignment_CO4) : 0), 0) / totalRows) : '',
-      co5: sheets.some(sheet => sheet.Assignment_CO5 != null) ? Math.round(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 != null ? parseFloat(sheet.Assignment_CO5) : 0), 0) / totalRows) : '',
+      co1: sheets.some(sheet => sheet.Assignment_CO1 != null) ? 
+        Math.floor(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO1 != null ? parseFloat(sheet.Assignment_CO1) : 0), 0) / 
+        sheets.filter(sheet => sheet.Assignment_CO1 != null).length) : '',
+      co2: sheets.some(sheet => sheet.Assignment_CO2 != null) ? 
+        Math.floor(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO2 != null ? parseFloat(sheet.Assignment_CO2) : 0), 0) / 
+        sheets.filter(sheet => sheet.Assignment_CO2 != null).length) : '',
+      co3: sheets.some(sheet => sheet.Assignment_CO3 != null) ? 
+        Math.floor(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO3 != null ? parseFloat(sheet.Assignment_CO3) : 0), 0) / 
+        sheets.filter(sheet => sheet.Assignment_CO3 != null).length) : '',
+      co4: sheets.some(sheet => sheet.Assignment_CO4 != null) ? 
+        Math.floor(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO4 != null ? parseFloat(sheet.Assignment_CO4) : 0), 0) / 
+        sheets.filter(sheet => sheet.Assignment_CO4 != null).length) : '',
+      co5: sheets.some(sheet => sheet.Assignment_CO5 != null) ? 
+        Math.floor(sheets.reduce((sum, sheet) => sum + (sheet.Assignment_CO5 != null ? parseFloat(sheet.Assignment_CO5) : 0), 0) / 
+        sheets.filter(sheet => sheet.Assignment_CO5 != null).length) : '',
     };
 
     // Calculate CO levels
     const calculateCOLevel = (scores, targetMark) => {
       if (targetMark === '') return '';
-      const totalStudents = scores.length;
-      const studentsAboveTarget = scores.filter(score => (score != null && parseFloat(score) >= targetMark)).length;
+      const validScores = scores.filter(score => score != null);
+      const totalStudents = validScores.length; // Only count students with valid scores
+      const studentsAboveTarget = validScores.filter(score => parseFloat(score) >= targetMark).length;
       const percentage = (studentsAboveTarget / totalStudents) * 100;
 
       if (percentage >= 70) return 3;
@@ -1313,11 +1364,11 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
     const studentsAboveTarget = {
       id: 'Students Above Target',
       name: '',
-      co1: targetMarks.co1 !== '' ? sheets.filter(s => (s.Assignment_CO1 != null && parseFloat(s.Assignment_CO1) >= targetMarks.co1)).length : '',
-      co2: targetMarks.co2 !== '' ? sheets.filter(s => (s.Assignment_CO2 != null && parseFloat(s.Assignment_CO2) >= targetMarks.co2)).length : '',
-      co3: targetMarks.co3 !== '' ? sheets.filter(s => (s.Assignment_CO3 != null && parseFloat(s.Assignment_CO3) >= targetMarks.co3)).length : '',
-      co4: targetMarks.co4 !== '' ? sheets.filter(s => (s.Assignment_CO4 != null && parseFloat(s.Assignment_CO4) >= targetMarks.co4)).length : '',
-      co5: targetMarks.co5 !== '' ? sheets.filter(s => (s.Assignment_CO5 != null && parseFloat(s.Assignment_CO5) >= targetMarks.co5)).length : '',
+      co1: targetMarks.co1 !== '' ? sheets.filter(s => s.Assignment_CO1 != null && parseFloat(s.Assignment_CO1) >= targetMarks.co1).length : '',
+      co2: targetMarks.co2 !== '' ? sheets.filter(s => s.Assignment_CO2 != null && parseFloat(s.Assignment_CO2) >= targetMarks.co2).length : '',
+      co3: targetMarks.co3 !== '' ? sheets.filter(s => s.Assignment_CO3 != null && parseFloat(s.Assignment_CO3) >= targetMarks.co3).length : '',
+      co4: targetMarks.co4 !== '' ? sheets.filter(s => s.Assignment_CO4 != null && parseFloat(s.Assignment_CO4) >= targetMarks.co4).length : '',
+      co5: targetMarks.co5 !== '' ? sheets.filter(s => s.Assignment_CO5 != null && parseFloat(s.Assignment_CO5) >= targetMarks.co5).length : '',
     };
 
     // Add students above target row
@@ -1472,23 +1523,28 @@ router.get('/generate-co-attainment/:subjectCode', async (req, res) => {
     
     // Calculate final scores
     const finalScores = cos.reduce((acc, co) => {
-      // Calculate CIE (30% weightage)
+      const validMST1Students = subjectData.sheets.filter(s => s[`MST1_${co}`] != null).length;
+      const validMST2Students = subjectData.sheets.filter(s => s[`MST2_${co}`] != null).length;
+      const validQuizStudents = subjectData.sheets.filter(s => s[`Assignment_${co}`] != null).length;
+      const validEndSemStudents = subjectData.sheets.filter(s => s[`EndSem_${co}`] != null).length;
+
+      // Calculate CIE (30% weightage) using valid student counts
       const cieScore = (
-        ((mstScores.MST1[co] || 0) + 
-         (mstScores.MST2[co] || 0) + 
-         (quizScores[co] || 0)) / studentCount
+        ((mstScores.MST1[co] || 0) / (validMST1Students || 1) + 
+         (mstScores.MST2[co] || 0) / (validMST2Students || 1) + 
+         (quizScores[co] || 0) / (validQuizStudents || 1))
       ) * 0.3;
       
-      // Calculate End Sem (70% weightage)
-      const endSemScore = (endSemScores[co] || 0) / studentCount * 0.7;
+      // Calculate End Sem (70% weightage) using valid student count
+      const endSemScore = (endSemScores[co] || 0) / (validEndSemStudents || 1) * 0.7;
       
       acc[co] = {
-        MST1: (mstScores.MST1[co] || 0) / studentCount,
-        MST2: (mstScores.MST2[co] || 0) / studentCount,
-        Quiz: (quizScores[co] || 0) / studentCount,
-        CIE: cieScore,
-        EndSem: (endSemScores[co] || 0) / studentCount,
-        Final: cieScore + endSemScore
+        MST1: Math.floor((mstScores.MST1[co] || 0) / (validMST1Students || 1)),
+        MST2: Math.floor((mstScores.MST2[co] || 0) / (validMST2Students || 1)),
+        Quiz: Math.floor((quizScores[co] || 0) / (validQuizStudents || 1)),
+        CIE: Math.floor(cieScore),
+        EndSem: Math.floor((endSemScores[co] || 0) / (validEndSemStudents || 1)),
+        Final: Math.floor(cieScore + endSemScore)
       };
       
       return acc;
