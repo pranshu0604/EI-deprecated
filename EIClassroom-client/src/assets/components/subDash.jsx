@@ -245,7 +245,17 @@ const deleteStudent = async (id, subjectCode) => {
   }
 }
 
+const validateMidSemester = (value) => {
+  return value === '' || (value >= 0 && value <= 5);
+};
 
+const validateEndSemester = (value) => {
+  return value === '' || (value >= 0 && value <= 14);
+};
+
+const validateAssignment = (value) => {
+  return value === '' || value >= 0;
+};
 
 const AddExamSchema = ({ setSchema, subjectCode }) => {
   const [formData, setFormData] = useState({
@@ -390,21 +400,39 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
     endsem: { Q1: null, Q2: null, Q3: null, Q4: null, Q5: null },
   });
   const [error, setError] = useState('');
+  const [isValid, setIsValid] = useState(true);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-  
+    const floatValue = parseFloat(value);
+
     // Check if it's a nested field by looking for '_'
     if (name.includes('_')) {
       const [section, key] = name.split('_');
-  
-      setFormData((prevData) => ({
-        ...prevData,
-        [section.toLowerCase()]: {
-          ...prevData[section.toLowerCase()],
-          [key]: parseFloat(value), // Ensure the value is parsed as a float
-        },
-      }));
+
+      // Validate based on section
+      let valid = true;
+      if (section === 'mst1' || section === 'mst2') {
+        valid = validateMidSemester(floatValue);
+      } else if (section === 'endSem') {
+        valid = validateEndSemester(floatValue);
+      } else if (section === 'assignment') {
+        valid = validateAssignment(floatValue);
+      }
+
+      if (valid) {
+        setFormData((prevData) => ({
+          ...prevData,
+          [section.toLowerCase()]: {
+            ...prevData[section.toLowerCase()],
+            [key]: floatValue, // Ensure the value is parsed as a float
+          },
+        }));
+        setError(''); // Clear error if valid
+      } else {
+        setError('Invalid input value');
+      }
+      setIsValid(valid);
     } else {
       // Simple fields like id or name
       setFormData((prevData) => ({
@@ -670,7 +698,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
 
             {error && <div className="text-red-500 mb-3">{error}</div>}
           </div>
-          <button type="submit" className="w-full px-4 py-2 mt-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800">
+          <button type="submit" className="w-full px-4 py-2 mt-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-colors duration-800" disabled={!isValid}>
             Submit
           </button>
         </div>
