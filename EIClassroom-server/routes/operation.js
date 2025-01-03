@@ -970,12 +970,14 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
 
     // Calculate CIE values for each CO
     ['co1', 'co2', 'co3', 'co4', 'co5'].forEach(co => {
-      const mst1Value = mst1Row[co] || 0;
-      const mst2Value = mst2Row[co] || 0;
-      const assignmentValue = assignmentRow[co] || 0;
-      
-      if (mst1Value !== '' || mst2Value !== '' || assignmentValue !== '') {
-        cieRow[co] = ((mst1Value + mst2Value + assignmentValue) * 0.3).toFixed(2);
+      const validCIEScores = [
+        mst1Row[co] || 0,
+        mst2Row[co] || 0,
+        assignmentRow[co] || 0
+      ].filter(score => score > 0);
+
+      if (validCIEScores.length > 0) {
+        cieRow[co] = (validCIEScores.reduce((sum, score) => sum + score, 0) / validCIEScores.length * 0.3).toFixed(2);
       }
     });
 
@@ -1528,12 +1530,14 @@ router.get('/generate-co-attainment/:subjectCode', async (req, res) => {
       const validQuizStudents = subjectData.sheets.filter(s => s[`Assignment_${co}`] != null).length;
       const validEndSemStudents = subjectData.sheets.filter(s => s[`EndSem_${co}`] != null).length;
 
-      // Calculate CIE (30% weightage) using valid student counts
-      const cieScore = (
-        ((mstScores.MST1[co] || 0) / (validMST1Students || 1) + 
-         (mstScores.MST2[co] || 0) / (validMST2Students || 1) + 
-         (quizScores[co] || 0) / (validQuizStudents || 1))
-      ) * 0.3;
+      // Calculate CIE (30% weightage) using average of MST1, MST2, and Quiz/Assignment scores
+      const validCIEScores = [
+        (mstScores.MST1[co] || 0) / (validMST1Students || 1),
+        (mstScores.MST2[co] || 0) / (validMST2Students || 1),
+        (quizScores[co] || 0) / (validQuizStudents || 1)
+      ].filter(score => score > 0);
+
+      const cieScore = (validCIEScores.reduce((sum, score) => sum + score, 0) / validCIEScores.length) * 0.3;
       
       // Calculate End Sem (70% weightage) using valid student count
       const endSemScore = (endSemScores[co] || 0) / (validEndSemStudents || 1) * 0.7;
