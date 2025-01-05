@@ -1057,6 +1057,59 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
       fgColor: { argb: 'FF90EE90' } // Light green background
     };
 
+    // Calculate Indirect CO row
+    const indirectRow = {
+      assessment: 'Indirect CO',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+
+    // Calculate average of indirect COs for each CO
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach((co, index) => {
+      const indirectScores = sheets
+        .map(student => student[`Indirect_CO${index + 1}`])
+        .filter(score => score !== null && score !== undefined);
+
+      if (indirectScores.length > 0) {
+        const average = indirectScores.reduce((sum, score) => sum + parseFloat(score), 0) / indirectScores.length;
+        indirectRow[co] = average.toFixed(2);
+      }
+    });
+
+    // Add Indirect CO row
+    const indirectRowAdded = worksheet.addRow(indirectRow);
+    indirectRowAdded.font = { bold: true };
+    indirectRowAdded.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFFFFF' } // White background
+    };
+
+    // Calculate Overall CO (80% Direct + 20% Indirect)
+    const overallRow = {
+      assessment: 'Overall CO',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach(co => {
+      const directValue = parseFloat(totalRow[co] || 0);
+      const indirectValue = parseFloat(indirectRow[co] || 0);
+      
+      if (directValue !== 0 || indirectValue !== 0) {
+        // Calculate weighted average: 80% of direct + 20% of indirect
+        const weightedScore = (directValue * 0.8) + (indirectValue * 0.2);
+        overallRow[co] = weightedScore.toFixed(2);
+      }
+    });
+
+    // Add Overall CO row
+    const overallRowAdded = worksheet.addRow(overallRow);
+    overallRowAdded.font = { bold: true };
+    overallRowAdded.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFB19CD9' } // Light purple background
+    };
+
     // Style the rows
     worksheet.eachRow((row, rowNumber) => {
       row.eachCell((cell) => {
@@ -1090,6 +1143,18 @@ router.get('/co-matrix/:subjectCode', async (req, res) => {
           type: 'pattern',
           pattern: 'solid',
           fgColor: { argb: 'FF90EE90' } // Light green
+        };
+      } else if (row.getCell(1).value === 'Indirect CO') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFFFFF' } // White
+        };
+      } else if (row.getCell(1).value === 'Overall CO') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFB19CD9' } // Light purple
         };
       }
       row.font = { bold: true };
@@ -1427,196 +1492,319 @@ router.get('/assignment-excel/:subjectCode', async (req, res) => {
   }
 });
 
-// Helper function to calculate MST scores for a specific CO
-const calculateMSTScores = (sheets, coMappings) => {
-  const scores = {
-    MST1: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 },
-    MST2: { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 }
-  };
-  
-  sheets.forEach(sheet => {
-    // MST1
-    if (sheet.MST1_Q1) {
-      scores.MST1[coMappings.MST1_Q1] = (scores.MST1[coMappings.MST1_Q1] || 0) + parseFloat(sheet.MST1_Q1);
-    }
-    if (sheet.MST1_Q2) {
-      scores.MST1[coMappings.MST1_Q2] = (scores.MST1[coMappings.MST1_Q2] || 0) + parseFloat(sheet.MST1_Q2);
-    }
-    if (sheet.MST1_Q3) {
-      scores.MST1[coMappings.MST1_Q3] = (scores.MST1[coMappings.MST1_Q3] || 0) + parseFloat(sheet.MST1_Q3);
-    }
-    
-    // MST2
-    if (sheet.MST2_Q1) {
-      scores.MST2[coMappings.MST2_Q1] = (scores.MST2[coMappings.MST2_Q1] || 0) + parseFloat(sheet.MST2_Q1);
-    }
-    if (sheet.MST2_Q2) {
-      scores.MST2[coMappings.MST2_Q2] = (scores.MST2[coMappings.MST2_Q2] || 0) + parseFloat(sheet.MST2_Q2);
-    }
-    if (sheet.MST2_Q3) {
-      scores.MST2[coMappings.MST2_Q3] = (scores.MST2[coMappings.MST2_Q3] || 0) + parseFloat(sheet.MST2_Q3);
-    }
-  });
-  
-  return scores;
-};
-
-// Helper function to calculate Quiz/Assignment scores
-const calculateQuizScores = (sheets) => {
-  const scores = { CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0 };
-  
-  sheets.forEach(sheet => {
-    if (sheet.Assignment_CO1) scores.CO1 += parseFloat(sheet.Assignment_CO1);
-    if (sheet.Assignment_CO2) scores.CO2 += parseFloat(sheet.Assignment_CO2);
-    if (sheet.Assignment_CO3) scores.CO3 += parseFloat(sheet.Assignment_CO3);
-    if (sheet.Assignment_CO4) scores.CO4 += parseFloat(sheet.Assignment_CO4);
-    if (sheet.Assignment_CO5) scores.CO5 += parseFloat(sheet.Assignment_CO5);
-  });
-  
-  return scores;
-};
-
-// Helper function to calculate End Semester scores
-const calculateEndSemScores = (sheets) => {
-  const scores = {
-    CO1: 0,
-    CO2: 0,
-    CO3: 0,
-    CO4: 0,
-    CO5: 0
-  };
-  
-  sheets.forEach(sheet => {
-    if (sheet.EndSem_Q1) scores.CO1 += parseFloat(sheet.EndSem_Q1);
-    if (sheet.EndSem_Q2) scores.CO2 += parseFloat(sheet.EndSem_Q2);
-    if (sheet.EndSem_Q3) scores.CO3 += parseFloat(sheet.EndSem_Q3);
-    if (sheet.EndSem_Q4) scores.CO4 += parseFloat(sheet.EndSem_Q4);
-    if (sheet.EndSem_Q5) scores.CO5 += parseFloat(sheet.EndSem_Q5);
-  });
-  
-  return scores;
-};
-
-router.get('/generate-co-attainment/:subjectCode', async (req, res) => {
+router.get('/overall-co-matrix/:subjectCode', async (req, res) => {
   try {
     const { subjectCode } = req.params;
     
-    // Fetch data for specific subject with correct relations
-    const subjectData = await prisma.subject.findUnique({
-      where: { code: subjectCode },
-      include: {
-        sheets: true
-      }
+    // Fetch CO mappings
+    const coMapping = await prisma.cO.findUnique({
+      where: { subjectCode }
     });
-    
-    if (!subjectData) {
-      return res.status(404).json({ error: 'Subject not found' });
-    }
-    
-    // Fetch CO mappings separately
-    const coMapping = await prisma.CO.findUnique({
-      where: { subjectCode: subjectCode }
-    });
-    
+
     if (!coMapping) {
       return res.status(404).json({ error: 'CO mapping not found' });
     }
-    
-    // Calculate all scores
-    const mstScores = calculateMSTScores(subjectData.sheets, coMapping);
-    const quizScores = calculateQuizScores(subjectData.sheets, coMapping.Quiz_Assignment);
-    const endSemScores = calculateEndSemScores(subjectData.sheets);
-    
-    const studentCount = subjectData.sheets.length;
-    const cos = ['CO1', 'CO2', 'CO3', 'CO4', 'CO5'];
-    
-    // Calculate final scores
-    const finalScores = cos.reduce((acc, co) => {
-      const validMST1Students = subjectData.sheets.filter(s => s[`MST1_${co}`] != null).length;
-      const validMST2Students = subjectData.sheets.filter(s => s[`MST2_${co}`] != null).length;
-      const validQuizStudents = subjectData.sheets.filter(s => s[`Assignment_${co}`] != null).length;
-      const validEndSemStudents = subjectData.sheets.filter(s => s[`EndSem_${co}`] != null).length;
 
-      // Calculate CIE (30% weightage) using average of MST1, MST2, and Quiz/Assignment scores
-      const validCIEScores = [
-        (mstScores.MST1[co] || 0) / (validMST1Students || 1),
-        (mstScores.MST2[co] || 0) / (validMST2Students || 1),
-        (quizScores[co] || 0) / (validQuizStudents || 1)
-      ].filter(score => score > 0);
+    // Fetch all sheets for calculations
+    const sheets = await prisma.sheet.findMany({
+      where: { subjectCode }
+    });
 
-      const cieScore = (validCIEScores.reduce((sum, score) => sum + score, 0) / validCIEScores.length) * 0.3;
-      
-      // Calculate End Sem (70% weightage) using valid student count
-      const endSemScore = (endSemScores[co] || 0) / (validEndSemStudents || 1) * 0.7;
-      
-      acc[co] = {
-        MST1: Math.floor((mstScores.MST1[co] || 0) / (validMST1Students || 1)),
-        MST2: Math.floor((mstScores.MST2[co] || 0) / (validMST2Students || 1)),
-        Quiz: Math.floor((quizScores[co] || 0) / (validQuizStudents || 1)),
-        CIE: Math.floor(cieScore),
-        EndSem: Math.floor((endSemScores[co] || 0) / (validEndSemStudents || 1)),
-        Final: Math.floor(cieScore + endSemScore)
-      };
-      
-      return acc;
-    }, {});
-    
-    // Create Excel workbook
+    if (sheets.length === 0) {
+      return res.status(404).json({ error: 'No sheets found' });
+    }
+
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('CO Attainment');
-    
-    // Updated column widths to accommodate longer content
+    const worksheet = workbook.addWorksheet('CO Matrix');
+
+    // Helper function to calculate CO level based on target score
+    const calculateCOLevel = (scores) => {
+      if (!scores.length) return '';
+      
+      const validScores = scores
+        .filter(score => score !== null && score !== undefined)
+        .map(score => parseFloat(score));
+
+      if (validScores.length === 0) return '';
+      
+      const average = Math.floor(validScores.reduce((sum, score) => sum + score, 0) / validScores.length);
+      
+      const studentsAboveTarget = scores
+        .filter(score => score !== null && score !== undefined && parseFloat(score) >= average)
+        .length;
+      const percentage = (studentsAboveTarget / scores.length) * 100;
+
+      if (percentage >= 70) return 3;
+      if (percentage >= 60) return 2;
+      if (percentage >= 50) return 1;
+      return 0;
+    };
+
+    // Set up headers
     worksheet.columns = [
-      { width: 12 },  // CO column
-      { width: 20 },  // MST-1
-      { width: 20 },  // MST-2
-      { width: 25 },  // Assignment/Quiz
-      { width: 25 },  // CIE
-      { width: 30 },  // End Sem Exam
-      { width: 30 },  // CO Direct Attainment
+      { header: 'Assessment', key: 'assessment', width: 15 },
+      { header: 'CO1', key: 'co1', width: 10 },
+      { header: 'CO2', key: 'co2', width: 10 },
+      { header: 'CO3', key: 'co3', width: 10 },
+      { header: 'CO4', key: 'co4', width: 10 },
+      { header: 'CO5', key: 'co5', width: 10 }
     ];
-    
-    // Add title
-    worksheet.mergeCells('A1:G1');
-    const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'SGSITS Indore - Overall Direct CO attainment';
-    titleCell.font = { bold: true, size: 14 };
-    titleCell.alignment = { horizontal: 'center' };
-    
-    // Add headers
-    const headers = [
-      ['', '', '', '', 'Cumulative Internal Evaluation', 'SEE (Semester End sem Exam)', 'CO Direct Attainment'],
-      ['', 'MST-1 (15M)', 'MST-2 (15M)', 'Assignment/Quiz (10)', '(CIE)', '', 'Total'],
-      ['', '', '', '', '30% Weightage', '70% Weightage', '30%+70% for each CO']
-    ];
-    
-    worksheet.mergeCells('B3:D3');
-    headers.forEach((row, index) => {
-      const rowIndex = index + 3;
-      worksheet.getRow(rowIndex).values = row;
-      worksheet.getRow(rowIndex).font = { bold: true };
+
+    // Style headers
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD3D3D3' }
+    };
+
+    // Calculate MST1 CO levels
+    const mst1Row = { assessment: 'MST1' };
+    ['CO1', 'CO2', 'CO3', 'CO4', 'CO5'].forEach(co => {
+      let totalScore = 0;
+      let studentCount = 0;
+      let studentsAboveTarget = 0;
+
+      sheets.forEach(student => {
+        let coTotal = 0;
+        if (coMapping.MST1_Q1 === co && student.MST1_Q1 != null) coTotal += parseFloat(student.MST1_Q1);
+        if (coMapping.MST1_Q2 === co && student.MST1_Q2 != null) coTotal += parseFloat(student.MST1_Q2);
+        if (coMapping.MST1_Q3 === co && student.MST1_Q3 != null) coTotal += parseFloat(student.MST1_Q3);
+        
+        if (coTotal > 0) {
+          totalScore += coTotal;
+          studentCount++;
+        }
+      });
+
+      if (studentCount > 0) {
+        const targetScore = Math.floor(totalScore / studentCount);
+        let validStudents = 0;
+        studentsAboveTarget = 0;
+
+        sheets.forEach(student => {
+          let coTotal = 0;
+          let hasValidScore = false;
+          if (coMapping.MST1_Q1 === co && student.MST1_Q1 != null) {
+            coTotal += parseFloat(student.MST1_Q1);
+            hasValidScore = true;
+          }
+          if (coMapping.MST1_Q2 === co && student.MST1_Q2 != null) {
+            coTotal += parseFloat(student.MST1_Q2);
+            hasValidScore = true;
+          }
+          if (coMapping.MST1_Q3 === co && student.MST1_Q3 != null) {
+            coTotal += parseFloat(student.MST1_Q3);
+            hasValidScore = true;
+          }
+          
+          if (hasValidScore) {
+            validStudents++;
+            if (coTotal >= targetScore) {
+              studentsAboveTarget++;
+            }
+          }
+        });
+
+        const percentage = (studentsAboveTarget / validStudents) * 100;
+        if (percentage >= 70) mst1Row[co.toLowerCase()] = 3;
+        else if (percentage >= 60) mst1Row[co.toLowerCase()] = 2;
+        else if (percentage >= 50) mst1Row[co.toLowerCase()] = 1;
+        else mst1Row[co.toLowerCase()] = 0;
+      } else {
+        mst1Row[co.toLowerCase()] = '';
+      }
     });
-    
-    // Add data
-    cos.forEach((co, index) => {
-      const rowIndex = index + 6;
-      worksheet.getRow(rowIndex).values = [
-        co,
-        finalScores[co].MST1,
-        finalScores[co].MST2,
-        finalScores[co].Quiz,
-        finalScores[co].CIE,
-        finalScores[co].EndSem,
-        finalScores[co].Final
-      ];
+
+    // Add MST1 row
+    worksheet.addRow(mst1Row);
+
+    // Similar calculations for MST2
+    const mst2Row = { assessment: 'MST2' };
+    ['CO1', 'CO2', 'CO3', 'CO4', 'CO5'].forEach(co => {
+      let totalScore = 0;
+      let studentCount = 0;
+      let studentsAboveTarget = 0;
+
+      sheets.forEach(student => {
+        let coTotal = 0;
+        if (coMapping.MST2_Q1 === co && student.MST2_Q1 != null) coTotal += parseFloat(student.MST2_Q1);
+        if (coMapping.MST2_Q2 === co && student.MST2_Q2 != null) coTotal += parseFloat(student.MST2_Q2);
+        if (coMapping.MST2_Q3 === co && student.MST2_Q3 != null) coTotal += parseFloat(student.MST2_Q3);
+        
+        if (coTotal > 0) {
+          totalScore += coTotal;
+          studentCount++;
+        }
+      });
+
+      if (studentCount > 0) {
+        const targetScore = Math.floor(totalScore / studentCount);
+        let validStudents = 0;
+        studentsAboveTarget = 0;
+
+        sheets.forEach(student => {
+          let coTotal = 0;
+          let hasValidScore = false;
+          if (coMapping.MST2_Q1 === co && student.MST2_Q1 != null) {
+            coTotal += parseFloat(student.MST2_Q1);
+            hasValidScore = true;
+          }
+          if (coMapping.MST2_Q2 === co && student.MST2_Q2 != null) {
+            coTotal += parseFloat(student.MST2_Q2);
+            hasValidScore = true;
+          }
+          if (coMapping.MST2_Q3 === co && student.MST2_Q3 != null) {
+            coTotal += parseFloat(student.MST2_Q3);
+            hasValidScore = true;
+          }
+          
+          if (hasValidScore) {
+            validStudents++;
+            if (coTotal >= targetScore) {
+              studentsAboveTarget++;
+            }
+          }
+        });
+
+        const percentage = (studentsAboveTarget / validStudents) * 100;
+        if (percentage >= 70) mst2Row[co.toLowerCase()] = 3;
+        else if (percentage >= 60) mst2Row[co.toLowerCase()] = 2;
+        else if (percentage >= 50) mst2Row[co.toLowerCase()] = 1;
+        else mst2Row[co.toLowerCase()] = 0;
+      } else {
+        mst2Row[co.toLowerCase()] = '';
+      }
     });
-    
-    // Style the data
+
+    // Add MST2 row
+    worksheet.addRow(mst2Row);
+
+    // Calculate Assignment CO levels
+    const assignmentRow = { assessment: 'Assignment' };
+    ['CO1', 'CO2', 'CO3', 'CO4', 'CO5'].forEach(co => {
+      const scores = sheets
+        .map(student => student[`Assignment_${co}`])
+        .filter(score => score !== null);
+      
+      assignmentRow[co.toLowerCase()] = calculateCOLevel(scores);
+    });
+    worksheet.addRow(assignmentRow);
+
+    // Add CIE Row with 30% weightage
+    const cieRow = {
+      assessment: 'CIE (30%)',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach(co => {
+      const mst1Score = mst1Row[co] || 0;
+      const mst2Score = mst2Row[co] || 0;
+      const mstBestScore = Math.max(mst1Score, mst2Score);
+      const assignmentScore = assignmentRow[co] || 0;
+
+      if (mstBestScore > 0 || assignmentScore > 0) {
+        const validScores = [];
+        if (mstBestScore > 0) validScores.push(mstBestScore);
+        if (assignmentScore > 0) validScores.push(assignmentScore);
+        
+        cieRow[co] = (validScores.reduce((sum, score) => sum + score, 0) / validScores.length * 0.3).toFixed(2);
+      }
+    });
+    worksheet.addRow(cieRow);
+
+    // Calculate EndSem CO levels
+    const endSemRow = { assessment: 'EndSem' };
+    ['CO1', 'CO2', 'CO3', 'CO4', 'CO5'].forEach((co, index) => {
+      const scores = sheets
+        .map(student => student[`EndSem_Q${index + 1}`])
+        .filter(score => score !== null);
+      
+      endSemRow[co.toLowerCase()] = calculateCOLevel(scores);
+    });
+    worksheet.addRow(endSemRow);
+
+    // Add EndSem 70% Row
+    const endSem70Row = {
+      assessment: 'EndSem (70%)',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach(co => {
+      if (endSemRow[co] !== '') {
+        endSem70Row[co] = (endSemRow[co] * 0.7).toFixed(2);
+      }
+    });
+    worksheet.addRow(endSem70Row);
+
+    // Calculate Total Row (CIE + EndSem)
+    const totalRow = {
+      assessment: 'Total (CIE + EndSem)',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach(co => {
+      const cieValue = parseFloat(cieRow[co] || 0);
+      const endSemValue = parseFloat(endSem70Row[co] || 0);
+      if (cieValue !== 0 || endSemValue !== 0) {
+        totalRow[co] = (cieValue + endSemValue).toFixed(2);
+      }
+    });
+    worksheet.addRow(totalRow);
+
+    // Calculate Indirect CO row
+    const indirectRow = {
+      assessment: 'Indirect CO',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+
+    // Calculate average of indirect COs for each CO
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach((co, index) => {
+      const indirectScores = sheets
+        .map(student => student[`Indirect_CO${index + 1}`])
+        .filter(score => score !== null && score !== undefined);
+
+      if (indirectScores.length > 0) {
+        const average = indirectScores.reduce((sum, score) => sum + parseFloat(score), 0) / indirectScores.length;
+        indirectRow[co] = average.toFixed(2);
+      }
+    });
+
+    // Add Indirect CO row
+    const indirectRowAdded = worksheet.addRow(indirectRow);
+    indirectRowAdded.font = { bold: true };
+    indirectRowAdded.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFFFFF' } // White background
+    };
+
+    // Calculate Overall CO (80% Direct + 20% Indirect)
+    const overallRow = {
+      assessment: 'Overall CO',
+      co1: '', co2: '', co3: '', co4: '', co5: ''
+    };
+
+    ['co1', 'co2', 'co3', 'co4', 'co5'].forEach(co => {
+      const directValue = parseFloat(totalRow[co] || 0);
+      const indirectValue = parseFloat(indirectRow[co] || 0);
+      
+      if (directValue !== 0 || indirectValue !== 0) {
+        // Calculate weighted average: 80% of direct + 20% of indirect
+        const weightedScore = (directValue * 0.8) + (indirectValue * 0.2);
+        overallRow[co] = weightedScore.toFixed(2);
+      }
+    });
+
+    // Add Overall CO row
+    const overallRowAdded = worksheet.addRow(overallRow);
+    overallRowAdded.font = { bold: true };
+    overallRowAdded.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFB19CD9' } // Light purple background
+    };
+
+    // Style the rows
     worksheet.eachRow((row, rowNumber) => {
       row.eachCell((cell) => {
-        if (typeof cell.value === 'number') {
-          cell.numFmt = '0.00';
-        }
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
         cell.border = {
           top: { style: 'thin' },
@@ -1625,26 +1813,52 @@ router.get('/generate-co-attainment/:subjectCode', async (req, res) => {
           right: { style: 'thin' }
         };
       });
+      
+      // Add specific colors for different rows
+      if (row.getCell(1).value === 'CIE (30%)') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE6E6FA' }
+        };
+      } else if (row.getCell(1).value === 'EndSem (70%)') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFA07A' }
+        };
+      } else if (row.getCell(1).value === 'Total (CIE + EndSem)') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF90EE90' }
+        };
+      } else if (row.getCell(1).value === 'Indirect CO') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFFFFFF' }
+        };
+      } else if (row.getCell(1).value === 'Overall CO') {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFB19CD9' }
+        };
+      }
     });
-    
-    // Set header row background
-    ['A3:G3', 'A4:G4', 'A5:G5'].forEach(range => {
-      worksheet.getCell(range).fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFB4C6E7' }
-      };
-    });
-    
-    // Generate response
+
+    // Set response headers
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=CO_Attainment_${subjectCode}.xlsx`);
-    
+    res.setHeader('Content-Disposition', `attachment; filename=Overall_CO_Matrix_${subjectCode}.xlsx`);
+
+    // Write to response
     await workbook.xlsx.write(res);
-    
+    res.end();
+
   } catch (error) {
-    console.error('Error generating CO attainment:', error);
-    res.status(500).json({ error: 'Failed to generate CO attainment sheet' });
+    console.error('Error generating Overall CO matrix:', error);
+    res.status(500).json({ error: 'Failed to generate Overall CO matrix' });
   }
 });
 

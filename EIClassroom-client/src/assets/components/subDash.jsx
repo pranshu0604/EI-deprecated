@@ -111,13 +111,7 @@ const SubDash = () => {
             </button>
             <button 
               className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
-              onClick={() => downloadIndirectCO(subjectCode)}
-            >
-              Indirect CO
-            </button>
-            <button 
-              className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
-              onClick={() => downloadCOSheet(subjectCode)}
+              onClick={() => downloadOverallCO(subjectCode)}
             >
               Overall CO
             </button>
@@ -941,26 +935,25 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
     });
   };
 
-const downloadIndirectCO = (subjectCode) => {
-  axios.get(`http://localhost:8080/api/operation/indirect-co/${subjectCode}`, {
-    responseType: 'blob',
-  })
-  .then((response) => {
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Indirect_CO_${subjectCode}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  })
-  .catch((error) => {
-    console.error('Error downloading the Indirect CO sheet:', error);
-  });
-};
+  const downloadOverallCO = (subjectCode) => {
+    axios.get(`http://localhost:8080/api/operation/overall-co-matrix/${subjectCode}`, {
+      responseType: 'blob',
+    })
+    .then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Overall_CO_Matrix_${subjectCode}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    })
+    .catch((error) => {
+      console.error('Error downloading the Overall CO matrix:', error);
+    });
+  };
 
 const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     id: editData.id,
     subjectCode,
