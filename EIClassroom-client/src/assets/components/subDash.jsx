@@ -281,15 +281,27 @@ const deleteStudent = async (id, subjectCode) => {
 }
 
 const validateMidSemester = (value) => {
-  return value === '' || (value >= 0 && value <= 5);
+  if (value === '' || value === null || isNaN(value)) return true;
+  const numValue = parseFloat(value);
+  return numValue >= 0 && numValue <= 5;
 };
 
 const validateEndSemester = (value) => {
-  return value === '' || (value >= 0 && value <= 14);
+  if (value === '' || value === null || isNaN(value)) return true;
+  const numValue = parseFloat(value);
+  return numValue >= 0 && numValue <= 14;
 };
 
 const validateAssignment = (value) => {
-  return value === '' || value >= 0;
+  if (value === '' || value === null || isNaN(value)) return true;
+  const numValue = parseFloat(value);
+  return numValue >= 0 && numValue <= 10;
+};
+
+const validateIndirectCO = (value) => {
+  if (value === '' || value === null || isNaN(value)) return true;
+  const numValue = parseFloat(value);
+  return numValue >= 0 && numValue <= 5;
 };
 
 const AddExamSchema = ({ setSchema, subjectCode }) => {
@@ -440,7 +452,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const floatValue = parseFloat(value);
+    const floatValue = value === '' ? '' : parseFloat(value);
 
     // Check if it's a nested field by looking for '_'
     if (name.includes('_')) {
@@ -454,6 +466,8 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
         valid = validateEndSemester(floatValue);
       } else if (section === 'assignment') {
         valid = validateAssignment(floatValue);
+      } else if (section === 'indirect') {
+        valid = validateIndirectCO(floatValue);
       }
 
       if (valid) {
@@ -461,12 +475,12 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
           ...prevData,
           [section.toLowerCase()]: {
             ...prevData[section.toLowerCase()],
-            [key]: floatValue, // Ensure the value is parsed as a float
+            [key]: value === '' ? null : floatValue,
           },
         }));
-        setError(''); // Clear error if valid
+        setError('');
       } else {
-        setError('Invalid input value');
+        setError(`Invalid input value. Please enter a value within the allowed range for ${section}`);
       }
       setIsValid(valid);
     } else {
@@ -969,7 +983,7 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const floatValue = parseFloat(value);
+    const floatValue = value === '' ? '' : parseFloat(value);
 
     // Check if it's a nested field by looking for '_'
     if (name.includes('_')) {
@@ -983,6 +997,8 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
         valid = validateEndSemester(floatValue);
       } else if (section === 'assignment') {
         valid = validateAssignment(floatValue);
+      } else if (section === 'indirect') {
+        valid = validateIndirectCO(floatValue);
       }
 
       if (valid) {
@@ -990,12 +1006,12 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
           ...prevData,
           [section.toLowerCase()]: {
             ...prevData[section.toLowerCase()],
-            [key]: floatValue, // Ensure the value is parsed as a float
+            [key]: value === '' ? null : floatValue,
           },
         }));
-        setError(''); // Clear error if valid
+        setError('');
       } else {
-        setError('Invalid input value');
+        setError(`Invalid input value. Please enter a value within the allowed range for ${section}`);
       }
       setIsValid(valid);
     } else {
