@@ -36,41 +36,45 @@ const SubDash = () => {
     }
   }, [subjectCode]);
 
+  const isHOD = localStorage.getItem("HOD");
+
   return (
     <div className="w-full min-h-screen h-full pb-12 poppins">
       {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} fetchData={fetchData} />}
       {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} />}
       {edit && <EditStudentPopup setEdit={setEdit} subjectCode={subjectCode} editData={editData} fetchData={fetchData} />}
       <div>
+      {isHOD && (
         <button
           className="bg-gray-200 dark:bg-gray-800 text-black dark:text-white px-4 py-2 rounded"
           onClick={() => navigate(-1)}
         >
           Back
-        </button>
+        </button>)}
         <h1 className='text-3xl font-bold dark:text-white pt-6 text-center'>{subjectCode}</h1>
         
         {/* Add Data Section */}
-        <div className='mb-4 mt-4 px-4 mx-2'>
-          <h2 className='text-lg font-semibold dark:text-white mb-2 flex items-center'>
-          <IoMdPersonAdd className='mr-2 text-violet-600'/>
-            <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Add Data</span>
-          </h2>
-          <div className='flex justify-start gap-4'>
-            <button 
-              className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
-              onClick={() => setSchema(true)}
-            >
-              Define Exam Schema
-            </button>
-            <button
-              className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
-              onClick={() => setCreate(true)}
-            >
-              Add Student
-            </button>
+        
+          <div className='mb-4 mt-4 px-4 mx-2'>
+            <h2 className='text-lg font-semibold dark:text-white mb-2 flex items-center'>
+            <IoMdPersonAdd className='mr-2 text-violet-600'/>
+              <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Add Data</span>
+            </h2>
+            <div className='flex justify-start gap-4'>
+              <button 
+                className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+                onClick={() => setSchema(true)}
+              >
+                Define Exam Schema
+              </button>
+              <button
+                className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+                onClick={() => setCreate(true)}
+              >
+                Add Student
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Excel Sheets Section */}
         <div className='px-4 pt-4 mx-2 w-11/12'>
@@ -78,10 +82,10 @@ const SubDash = () => {
           <IoStatsChart className='mr-2 text-violet-600'/>
             <span className='bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text'>Excel Sheets</span>
           </h2>
-          <div className='grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 gap-4'>
+          <div className='grid lg:grid-cols-8 md:grid-cols-4 grid-cols-2 gap-4'>
             <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
               onClick={() => overallSheet(subjectCode)}>
-              Overall Report
+              Export All
             </button>  
             <button className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
               onClick={() => downloadMST1(subjectCode)}>
@@ -103,7 +107,19 @@ const SubDash = () => {
               className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
               onClick={() => downloadCOMatrix(subjectCode)}
             >
-              CO Matrix
+              Direct CO
+            </button>
+            <button 
+              className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadIndirectCO(subjectCode)}
+            >
+              Indirect CO
+            </button>
+            <button 
+              className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+              onClick={() => downloadCOSheet(subjectCode)}
+            >
+              Overall CO
             </button>
           </div>
         </div>
@@ -924,6 +940,24 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
       console.error('Error downloading the CO matrix:', error);
     });
   };
+
+const downloadIndirectCO = (subjectCode) => {
+  axios.get(`http://localhost:8080/api/operation/indirect-co/${subjectCode}`, {
+    responseType: 'blob',
+  })
+  .then((response) => {
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Indirect_CO_${subjectCode}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  })
+  .catch((error) => {
+    console.error('Error downloading the Indirect CO sheet:', error);
+  });
+};
 
 const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
   const navigate = useNavigate();

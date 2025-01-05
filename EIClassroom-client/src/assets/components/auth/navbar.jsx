@@ -30,26 +30,6 @@ export default function Navbar() {
           </h1>
         </div>
 
-        <div className="flex-1 hidden md:flex justify-center">
-        <div className="flex items-center justify-center">
-          <label className="relative inline-flex items-center cursor-pointer mr-2">
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={theme === "dark"}
-              onChange={handleThemeToggle}
-            />
-            <div className="w-12 h-6 bg-gray-200 dark:bg-gray-800 rounded-full shadow-inner"></div>
-            <div
-              className={`absolute w-6 h-6 bg-white rounded-full shadow transition-transform duration-300 ease-in-out ${
-                theme === "dark" ? "translate-x-6" : "translate-x-0"
-              }`}
-            ></div>
-          </label>
-          <span className="text-xl">{theme === "dark" ? "🌙" : "☀️"}</span>
-        </div>
-        </div>
-
         <div className="flex-1 flex justify-end">
           <button
             className="mx-2 py-1 px-4 bg-blue-500 rounded-sm"
