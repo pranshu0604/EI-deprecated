@@ -41,7 +41,7 @@ router.post('/co-form', async (req, res) => {
 
 // Route to create a new sheet entry
 router.post('/submit-form', async (req, res) => {
-  const { id, name, subjectCode, mst1, mst2, assignment, endsem } = req.body;
+  const { id, name, subjectCode, mst1, mst2, assignment, endsem, indirect } = req.body;
 
   const MST1_Q1 = mst1?.Q1;
   const MST1_Q2 = mst1?.Q2;
@@ -63,7 +63,15 @@ router.post('/submit-form', async (req, res) => {
   const EndSem_Q4 = endsem?.Q4;
   const EndSem_Q5 = endsem?.Q5;
 
+  const Indirect_CO1 = indirect?.CO1;
+  const Indirect_CO2 = indirect?.CO2;
+  const Indirect_CO3 = indirect?.CO3;
+  const Indirect_CO4 = indirect?.CO4;
+  const Indirect_CO5 = indirect?.CO5;
+
   try {
+    console.log('Received data:', req.body); // Log the received data
+
     // Find the teacher based on subjectCode
     const subject = await prisma.subject.findUnique({
       where: {
@@ -85,22 +93,27 @@ router.post('/submit-form', async (req, res) => {
         name,
         subjectCode,
         teacherId: subject.teacher.id, // Dynamically connect teacher through subjectCode
-        MST1_Q1: parseFloat(MST1_Q1),
-        MST1_Q2: parseFloat(MST1_Q2),
-        MST1_Q3: parseFloat(MST1_Q3),
-        MST2_Q1: parseFloat(MST2_Q1),
-        MST2_Q2: parseFloat(MST2_Q2),
-        MST2_Q3: parseFloat(MST2_Q3),
-        EndSem_Q1: parseFloat(EndSem_Q1),
-        EndSem_Q2: parseFloat(EndSem_Q2),
-        EndSem_Q3: parseFloat(EndSem_Q3),
-        EndSem_Q4: parseFloat(EndSem_Q4),
-        EndSem_Q5: parseFloat(EndSem_Q5),
-        Assignment_CO1: parseFloat(Assignment_CO1),
-        Assignment_CO2: parseFloat(Assignment_CO2),
-        Assignment_CO3: parseFloat(Assignment_CO3),
-        Assignment_CO4: parseFloat(Assignment_CO4),
-        Assignment_CO5: parseFloat(Assignment_CO5),
+        MST1_Q1: MST1_Q1 != null ? parseFloat(MST1_Q1) : null,
+        MST1_Q2: MST1_Q2 != null ? parseFloat(MST1_Q2) : null,
+        MST1_Q3: MST1_Q3 != null ? parseFloat(MST1_Q3) : null,
+        MST2_Q1: MST2_Q1 != null ? parseFloat(MST2_Q1) : null,
+        MST2_Q2: MST2_Q2 != null ? parseFloat(MST2_Q2) : null,
+        MST2_Q3: MST2_Q3 != null ? parseFloat(MST2_Q3) : null,
+        EndSem_Q1: EndSem_Q1 != null ? parseFloat(EndSem_Q1) : null,
+        EndSem_Q2: EndSem_Q2 != null ? parseFloat(EndSem_Q2) : null,
+        EndSem_Q3: EndSem_Q3 != null ? parseFloat(EndSem_Q3) : null,
+        EndSem_Q4: EndSem_Q4 != null ? parseFloat(EndSem_Q4) : null,
+        EndSem_Q5: EndSem_Q5 != null ? parseFloat(EndSem_Q5) : null,
+        Assignment_CO1: Assignment_CO1 != null ? parseFloat(Assignment_CO1) : null,
+        Assignment_CO2: Assignment_CO2 != null ? parseFloat(Assignment_CO2) : null,
+        Assignment_CO3: Assignment_CO3 != null ? parseFloat(Assignment_CO3) : null,
+        Assignment_CO4: Assignment_CO4 != null ? parseFloat(Assignment_CO4) : null,
+        Assignment_CO5: Assignment_CO5 != null ? parseFloat(Assignment_CO5) : null,
+        Indirect_CO1: Indirect_CO1 != null ? parseFloat(Indirect_CO1) : null,
+        Indirect_CO2: Indirect_CO2 != null ? parseFloat(Indirect_CO2) : null,
+        Indirect_CO3: Indirect_CO3 != null ? parseFloat(Indirect_CO3) : null,
+        Indirect_CO4: Indirect_CO4 != null ? parseFloat(Indirect_CO4) : null,
+        Indirect_CO5: Indirect_CO5 != null ? parseFloat(Indirect_CO5) : null,
       },
     });
 
@@ -154,22 +167,11 @@ router.put('/sheets/:id/:subjectCode', async (req, res) => {
   const { id, subjectCode } = req.params;
   const {         
     name,
-    MST1_Q1,
-    MST1_Q2,
-    MST1_Q3,
-    MST2_Q1,
-    MST2_Q2,
-    MST2_Q3,
-    Assignment_CO1,
-    Assignment_CO2,
-    Assignment_CO3,
-    Assignment_CO4,
-    Assignment_CO5,
-    EndSem_Q1,
-    EndSem_Q2,
-    EndSem_Q3,
-    EndSem_Q4,
-    EndSem_Q5 
+    mst1,
+    mst2,
+    assignment,
+    endsem,
+    indirect
   } = req.body;
 
   try {
@@ -182,22 +184,27 @@ router.put('/sheets/:id/:subjectCode', async (req, res) => {
       },
       data: {
         name,
-        MST1_Q1,
-        MST1_Q2,
-        MST1_Q3,
-        MST2_Q1,
-        MST2_Q2,
-        MST2_Q3,
-        Assignment_CO1,
-        Assignment_CO2,
-        Assignment_CO3,
-        Assignment_CO4,
-        Assignment_CO5,
-        EndSem_Q1,
-        EndSem_Q2,
-        EndSem_Q3,
-        EndSem_Q4,
-        EndSem_Q5
+        MST1_Q1: mst1.Q1,
+        MST1_Q2: mst1.Q2,
+        MST1_Q3: mst1.Q3,
+        MST2_Q1: mst2.Q1,
+        MST2_Q2: mst2.Q2,
+        MST2_Q3: mst2.Q3,
+        Assignment_CO1: assignment.CO1,
+        Assignment_CO2: assignment.CO2,
+        Assignment_CO3: assignment.CO3,
+        Assignment_CO4: assignment.CO4,
+        Assignment_CO5: assignment.CO5,
+        EndSem_Q1: endsem.Q1,
+        EndSem_Q2: endsem.Q2,
+        EndSem_Q3: endsem.Q3,
+        EndSem_Q4: endsem.Q4,
+        EndSem_Q5: endsem.Q5,
+        Indirect_CO1: indirect.CO1,
+        Indirect_CO2: indirect.CO2,
+        Indirect_CO3: indirect.CO3,
+        Indirect_CO4: indirect.CO4,
+        Indirect_CO5: indirect.CO5
       },
     });
 
