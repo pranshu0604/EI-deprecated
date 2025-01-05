@@ -301,7 +301,7 @@ const validateAssignment = (value) => {
 const validateIndirectCO = (value) => {
   if (value === '' || value === null || isNaN(value)) return true;
   const numValue = parseFloat(value);
-  return numValue >= 0 && numValue <= 5;
+  return numValue >= 0 && numValue <= 3;
 };
 
 const AddExamSchema = ({ setSchema, subjectCode }) => {
