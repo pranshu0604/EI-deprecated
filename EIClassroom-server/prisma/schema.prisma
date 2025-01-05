@@ -50,6 +50,11 @@ model Sheet {
   EndSem_Q3           Decimal?          // Nullable field
   EndSem_Q4           Decimal?          // Nullable field
   EndSem_Q5           Decimal?          // Nullable field
+  Indirect_CO1        Decimal?          // Nullable field
+  Indirect_CO2        Decimal?          // Nullable field
+  Indirect_CO3        Decimal?          // Nullable field
+  Indirect_CO4        Decimal?          // Nullable field
+  Indirect_CO5        Decimal?          // Nullable field
   @@id([id, subjectCode]) // Composite primary key
 }
 
