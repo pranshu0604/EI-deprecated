@@ -6,7 +6,6 @@ import { FaTrash, FaEdit } from "react-icons/fa";
 import { IoStatsChart } from "react-icons/io5";
 import { IoMdPersonAdd } from "react-icons/io";
 
-
 const SubDash = () => {
   const { subjectCode } = useParams();
   const [create, setCreate] = useState(false);
@@ -14,12 +13,34 @@ const SubDash = () => {
   const [edit, setEdit] = useState(false);
   const [editData, setEditData] = useState(null);
   const navigate = useNavigate();
+  const [sheets, setSheets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:8080/api/operation/sheets?subjectCode=${subjectCode}`);
+      setSheets(response.data);
+      setError(null);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching sheets:', err);
+      setError(err.response?.data?.error || 'Failed to fetch sheets');
+    }
+  };
+
+  useEffect(() => {
+    if (subjectCode) {
+      fetchData();
+    }
+  }, [subjectCode]);
 
   return (
     <div className="w-full min-h-screen h-full pb-12 poppins">
-      {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} />}
+      {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} fetchData={fetchData} />}
       {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} />}
-      {edit && <EditStudentPopup setEdit={setEdit} subjectCode={subjectCode} editData={editData} />}
+      {edit && <EditStudentPopup setEdit={setEdit} subjectCode={subjectCode} editData={editData} fetchData={fetchData} />}
       <div>
         <button
           className="bg-gray-200 dark:bg-gray-800 text-black dark:text-white px-4 py-2 rounded"
@@ -86,39 +107,16 @@ const SubDash = () => {
             </button>
           </div>
         </div>
-        <List subjectCode={subjectCode} setEdit={setEdit} setEditData={setEditData}/>
+        <List subjectCode={subjectCode} setEdit={setEdit} setEditData={setEditData} sheets={sheets} loading={loading} error={error} />
       </div>
     </div>
   )
 }
 
 // Separate List component with its own state management
-const List = ({ subjectCode, setEdit, setEditData }) => {
+const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error }) => {
   // Declare all state variables at the beginning of the component
-  const [sheets, setSheets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   console.log(sheets);
-
-  useEffect(() => {
-    // Define the fetch function
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`http://localhost:8080/api/operation/sheets?subjectCode=${subjectCode}`);
-        setSheets(response.data);
-        setError(null);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching sheets:', err);
-        setError(err.response?.data?.error || 'Failed to fetch sheets');
-      }
-    };
-
-    if (subjectCode) {
-      fetchData();
-    }
-  }, [subjectCode]);
 
   if (loading) {
     return (
@@ -415,7 +413,7 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
 };
 
  
-const AddStudentPopup = ({ setCreate, subjectCode }) => {
+const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     id: '',
@@ -484,7 +482,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
       });
       console.log('Student added:', response.data);
       setCreate(false);
-      navigate(0);
+      fetchData(); // Recall fetchData after successful add
     } catch (err) {
       console.error('Error adding student:', err);
       setError(err.response?.data?.error || 'Failed to add student. Please try again.');
@@ -927,7 +925,7 @@ const AddStudentPopup = ({ setCreate, subjectCode }) => {
     });
   };
 
-const EditStudentPopup = ({ setEdit, subjectCode, editData }) => {
+const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     id: editData.id,
@@ -996,7 +994,7 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData }) => {
       });
       console.log('Student updated:', response.data);
       setEdit(false);
-      navigate(0);
+      fetchData(); // Recall fetchData after successful edit
     } catch (err) {
       console.error('Error updating student:', err);
       setError(err.response?.data?.error || 'Failed to update student. Please try again.');
