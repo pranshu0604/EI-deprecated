@@ -97,6 +97,11 @@ const CreateSubject = ({create, setCreate}) => {
   
     const handleChange = (e) => {
       setFormData({ ...formData, [e.target.name]: e.target.value });
+      if (e.target.name === 'code' && e.target.value.includes('/')) {
+        setError('Subject code cannot contain "/"');
+      } else {
+        setError('');
+      }
     };
   
     const handleSubmit = async (e) => {
@@ -137,7 +142,7 @@ const CreateSubject = ({create, setCreate}) => {
                 type="text"
                 name="name"
                 id="subject_name"
-                className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-purple-500 focus:outline-none focus:ring-0 focus:border-purple-600 peer"
+                className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text:white dark:border-gray-600 dark:focus:border-purple-500 focus:outline-none focus:ring-0 focus:border-purple-600 peer"
                 placeholder=" "
                 value={formData.name}
                 onChange={handleChange}
@@ -156,7 +161,7 @@ const CreateSubject = ({create, setCreate}) => {
                 type="text"
                 name="code"
                 id="subject_code"
-                className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-purple-500 focus:outline-none focus:ring-0 focus:border-purple-600 peer"
+                className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text:white dark:border-gray-600 dark:focus:border-purple-500 focus:outline-none focus:ring-0 focus:border-purple-600 peer"
                 placeholder=" "
                 value={formData.code}
                 onChange={handleChange}
@@ -174,6 +179,7 @@ const CreateSubject = ({create, setCreate}) => {
             <button
               type="submit"
               className="text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-lg w-full sm:w-auto px-5 py-2.5 mt-5 text-center dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-800"
+              disabled={formData.code.includes('/')}
             >
               Submit
             </button>
