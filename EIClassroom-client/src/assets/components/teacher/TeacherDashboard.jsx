@@ -30,6 +30,7 @@ const Loading = () => {
       </div>
     )
   }
+  
 const TeacherDashbard = () => {
     const [create, setCreate] = useState(false);
     const [subjects, setSubjects] = useState([]);
