@@ -111,6 +111,11 @@ const CreateSubject = ({create, setCreate}) => {
     e.preventDefault();
     setError('');
 
+    if (formData.code.includes('/')) {
+      setError('Subject code cannot contain "/"');
+      return;
+    }
+
     try {
       const response = await axios.post(`https://ei-deprecated.onrender.com/api/subjects/newsubject`, formData, {
         headers: {
