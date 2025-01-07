@@ -4,6 +4,7 @@ import Label from "../ui/label";
 import Input from "../ui/input";
 import { cn } from "../../../../lib/utils";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react"; // Import Lucide React icons
 
 const Signin = () => {
   localStorage.clear();
@@ -23,6 +24,7 @@ const Signin = () => {
   });
   const [error, setError] = useState(null); // Error state
   const [success, setSuccess] = useState(null); // Success state
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   const navigate = useNavigate();
 
   const handleThemeToggle = () => {
@@ -128,20 +130,29 @@ const Signin = () => {
 
           <LabelInputContainer className="mb-4">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              placeholder="••••••••"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                placeholder="••••••••"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </LabelInputContainer>
 
           {error && <p className="text-red-500 text-center pb-2">{error}</p>}
           {success && <p className="text-green-500 text-center pb-2">{success}</p>}
 
           <button
-            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] flex items-center justify-center"
+            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset] flex items-center justify-center"
             type="submit"
             disabled={buttonLoading} // Disable button when loading
           >
