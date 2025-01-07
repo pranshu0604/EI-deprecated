@@ -20,7 +20,7 @@ const SubDash = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://ei-deprecated.onrender.com/api/operation/sheets?subjectCode=${subjectCode}`);
+      const response = await axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/sheets?subjectCode=${subjectCode}`);
       setSheets(response.data);
       setError(null);
       setLoading(false);
@@ -274,7 +274,7 @@ const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error }) => 
 
 const deleteStudent = async (id, subjectCode) => {
   if(window.confirm('Are you sure you want to delete this student?')){
-    const response = await axios.delete(`https://ei-deprecated.onrender.com/api/operation/sheets/${id}/${subjectCode}`);
+    const response = await axios.delete(`https://ei-deprecated-xpyt.onrender.com/api/operation/sheets/${id}/${subjectCode}`);
     console.log(response.data);
     window.location.reload();
   }
@@ -354,7 +354,7 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
     console.log('Data to Submit:', dataToSubmit); // Debug log to check the final form data
 
     try {
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/co-form`, dataToSubmit);
+      const response = await axios.post(`https://ei-deprecated-xpyt.onrender.com/api/operation/co-form`, dataToSubmit);
       alert('Form submitted successfully!');
       console.log(response.data);
       setSchema(false); // Optionally close the form
@@ -498,7 +498,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
 
     try {
       console.log('Submitting form data:', formData); // Log the form data being submitted
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/operation/submit-form`, formData, {
+      const response = await axios.post(`https://ei-deprecated-xpyt.onrender.com/api/operation/submit-form`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -821,7 +821,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
 
 
   const overallSheet = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/overall-sheet?subjectCode=${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -840,7 +840,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadMST1 = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst1/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/downloadmst1/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -859,7 +859,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadMST2 = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/downloadmst2/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/downloadmst2/${subjectCode}`, {
       responseType: 'blob', // Important to set response type as blob for file download
     })
     .then((response) => {
@@ -878,7 +878,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadEndSem = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/end-excel/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/end-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -896,7 +896,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadAssignment = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/assignment-excel/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/assignment-excel/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -914,7 +914,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadCOSheet = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/generate-co-attainment/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/generate-co-attainment/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -932,7 +932,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadCOMatrix = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/co-matrix/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/co-matrix/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -950,7 +950,7 @@ const AddStudentPopup = ({ setCreate, subjectCode, fetchData }) => {
   };
 
   const downloadOverallCO = (subjectCode) => {
-    axios.get(`https://ei-deprecated.onrender.com/api/operation/overall-co-matrix/${subjectCode}`, {
+    axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/overall-co-matrix/${subjectCode}`, {
       responseType: 'blob',
     })
     .then((response) => {
@@ -1029,7 +1029,7 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
 
     try {
       console.log('Submitting form data:', formData); // Log the form data being submitted
-      const response = await axios.put(`https://ei-deprecated.onrender.com/api/operation/sheets/${formData.id}/${formData.subjectCode}`, formData, {
+      const response = await axios.put(`https://ei-deprecated-xpyt.onrender.com/api/operation/sheets/${formData.id}/${formData.subjectCode}`, formData, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',

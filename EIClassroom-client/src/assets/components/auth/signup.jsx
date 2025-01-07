@@ -58,7 +58,7 @@ const Signup = () => {
 
     try {
       // Send the signup request to the backend
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/auth/signup`, formData);
+      const response = await axios.post(`https://ei-deprecated-xpyt.onrender.com/api/auth/signup`, formData);
 
       
       setSuccess("Signup successful!");

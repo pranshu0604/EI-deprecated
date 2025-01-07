@@ -38,7 +38,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get(`https://ei-deprecated.onrender.com/api/subjects/subjects`, {
+        const response = await axios.get(`https://ei-deprecated-xpyt.onrender.com/api/subjects/subjects`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
           }
@@ -117,7 +117,7 @@ const CreateSubject = ({create, setCreate}) => {
     setError('');
 
     try {
-      const response = await axios.post(`https://ei-deprecated.onrender.com/api/subjects/newsubject`, formData, {
+      const response = await axios.post(`https://ei-deprecated-xpyt.onrender.com/api/subjects/newsubject`, formData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming you store the token in localStorage
