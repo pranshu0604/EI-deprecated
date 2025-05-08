@@ -7,6 +7,7 @@ import SubDash from './assets/components/subDash'
 import HOD from './assets/components/HOD'
 import StudentSidebar from './assets/components/student/StudentSidebar'
 import TeacherSidebar from './assets/components/teacher/TeacherSidebar'
+import POGenerator from './assets/components/teacher/POGenerator'
 
 function App() {
 
@@ -22,6 +23,7 @@ function App() {
             {/* <Route path="/teachers/subjects/:subjectCode" element={<SubDash />} /> */}
             <Route path='/allsubs' element={<HOD />} />
             <Route path="/allsubs/:subjectCode" element={<SubDash />} />
+            <Route path="/po-generator" element={<POGenerator />} /> 
             <Route path='/students/*' element={<StudentSidebar />} />
             <Route path='/teachers/*' element={<TeacherSidebar />} />
           </Routes>
