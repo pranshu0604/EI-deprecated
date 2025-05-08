@@ -13,7 +13,8 @@ import {
   Users,
   LogOut,
   ArrowUp01,
-  AudioLines
+  AudioLines,
+  FileBarChart
 } from 'lucide-react';
 import { Sidebar, SidebarBody, SidebarLink } from '../ui/sidebar';
 import {  Routes, Route, Link } from 'react-router-dom';
@@ -27,6 +28,7 @@ import Students from './Students';
 import subDash from '../subDash';
 import SubDash from '../subDash';
 import Tests from './Tests';
+import POGenerator from './POGenerator';
 
 const TeacherSidebar = () => {
   const [theme, setTheme] = useState(
@@ -60,6 +62,11 @@ const TeacherSidebar = () => {
     //     href: "/teachers/students",
     //     icon: <Users className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
     // },
+    {
+      label: "PO Generator",
+      href: "/teachers/po-generator",
+      icon: <FileBarChart className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+    },
     {
         label: "Download Reports",
         href: "/teachers/reports",
@@ -162,6 +169,7 @@ const Dashboard = () => {
             <Route path="/:subjectCode" element={<SubjectDashboard />} />
             <Route path="/students" element={<Students />} />
             <Route path="/tests" element={<Tests />} />
+            <Route path="/po-generator" element={<POGenerator />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/reports/:subjectCode" element={<SubDash />} />
             <Route path="/profile" element={<Profile />} />
