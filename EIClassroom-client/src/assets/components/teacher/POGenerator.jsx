@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { IoStatsChart } from "react-icons/io5";
+import { FaFileUpload } from "react-icons/fa";
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 
 const POGenerator = () => {
   // Initialize matrix1 with 5 rows of input cells and 1 row for average
@@ -14,6 +16,8 @@ const POGenerator = () => {
   );
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
 
   // Handle change in first matrix values
   const handleMatrix1Change = (row, col, value) => {
@@ -89,6 +93,74 @@ const POGenerator = () => {
     calculated.push(outputAverage);
     setOutputMatrix(calculated);
   }, [matrix1, matrix2]);
+
+  // Handle file upload for CO values
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    setUploadError('');
+    
+    if (!file) return;
+    
+    // Check file extension
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+      setUploadError('Please upload an Excel file (.xlsx or .xls)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first worksheet
+        const worksheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[worksheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Find the row with "Overall CO" assessment
+        const overallCoRow = jsonData.find(row => 
+          row.Assessment === 'Overall CO' || 
+          row.Assessment === 'Overall CO ' || 
+          String(row.Assessment).trim().toLowerCase() === 'overall co');
+        
+        if (!overallCoRow) {
+          setUploadError('Could not find "Overall CO" row in the Excel file');
+          return;
+        }
+        
+        // Extract CO values
+        const newMatrix2 = Array(5).fill('');
+        for (let i = 1; i <= 5; i++) {
+          const coValue = overallCoRow[`CO${i}`];
+          newMatrix2[i-1] = coValue !== undefined ? coValue : '';
+        }
+        
+        setMatrix2(newMatrix2);
+        
+      } catch (error) {
+        console.error('Error parsing Excel file:', error);
+        setUploadError('Failed to parse the Excel file. Please check the format.');
+      }
+    };
+    
+    reader.onerror = () => {
+      setUploadError('Error reading the file');
+    };
+    
+    reader.readAsArrayBuffer(file);
+    
+    // Reset the file input
+    event.target.value = null;
+  };
+
+  // Handler to trigger file input click
+  const handleUploadButtonClick = () => {
+    fileInputRef.current.click();
+  };
 
   // Export to Excel function
   const exportToExcel = async () => {
@@ -198,6 +270,22 @@ const POGenerator = () => {
           <IoStatsChart className="mr-2 text-violet-600" />
           <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text">Overall CO Attainment</span>
         </h2>
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={handleUploadButtonClick}
+            className="px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 flex items-center gap-2"
+          >
+            <FaFileUpload /> Upload PO Report
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".xlsx,.xls" 
+            onChange={handleFileUpload} 
+          />
+          {uploadError && <span className="text-red-500">{uploadError}</span>}
+        </div>
         <div className="overflow-x-auto">
           <table className="table-auto border-collapse border border-neutral-300 dark:border-neutral-700 w-full">
             <thead className="bg-[#F5F5F5] dark:bg-neutral-800">
