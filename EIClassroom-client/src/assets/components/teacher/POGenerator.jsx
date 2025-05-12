@@ -132,13 +132,14 @@ const POGenerator = () => {
           return;
         }
         
-        // Extract CO values
+        // Extract CO values without affecting matrix1
         const newMatrix2 = Array(5).fill('');
         for (let i = 1; i <= 5; i++) {
           const coValue = overallCoRow[`CO${i}`];
           newMatrix2[i-1] = coValue !== undefined ? coValue : '';
         }
         
+        // Update only matrix2, preserving matrix1 state
         setMatrix2(newMatrix2);
         
       } catch (error) {
@@ -211,8 +212,60 @@ const POGenerator = () => {
     <div className="w-fit min-h-screen h-full pb-12 poppins">
       <h1 className="text-3xl font-bold dark:text-white pt-6 text-center">PO Generator</h1>
 
-      {/* First Input Matrix */}
+      {/* Overall CO Attainment (Previously Second Matrix) */}
       <div className="mb-8 mt-8 mx-6">
+        <h2 className="text-lg font-semibold dark:text-white mb-4 flex items-center">
+          <IoStatsChart className="mr-2 text-violet-600" />
+          <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text">Overall CO Attainment</span>
+        </h2>
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={handleUploadButtonClick}
+            className="px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 flex items-center gap-2"
+          >
+            <FaFileUpload /> Upload CO Report
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".xlsx,.xls" 
+            onChange={handleFileUpload} 
+          />
+          {uploadError && <span className="text-red-500">{uploadError}</span>}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="table-auto border-collapse border border-neutral-300 dark:border-neutral-700 w-full">
+            <thead className="bg-[#F5F5F5] dark:bg-neutral-800">
+              <tr>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <th key={i} className="border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-gray-700 dark:text-white">CO{i + 1}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="bg-white dark:bg-black">
+                {matrix2.map((cell, colIndex) => (
+                  <td key={colIndex} className="border border-neutral-300 dark:border-neutral-700 px-3 py-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={cell}
+                      onChange={(e) =>
+                        handleMatrix2Change(colIndex, e.target.value)
+                      }
+                      className="border border-neutral-300 dark:border-neutral-700 rounded px-2 py-1 w-full bg-white dark:bg-neutral-800 dark:text-white"
+                    />
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* CO-PO Articulation Matrix (Previously First Matrix) */}
+      <div className="mb-8 mx-6">
         <h2 className="text-lg font-semibold dark:text-white mb-4 flex items-center">
           <IoStatsChart className="mr-2 text-violet-600" />
           <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text">CO-PO Articulation Matrix</span>
@@ -256,58 +309,6 @@ const POGenerator = () => {
                 {averageRow.map((cell, colIndex) => (
                   <td key={colIndex} className="border border-neutral-300 dark:border-neutral-700 px-3 py-2 dark:text-white">
                     {cell}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Second Input Matrix */}
-      <div className="mb-8 mx-6">
-        <h2 className="text-lg font-semibold dark:text-white mb-4 flex items-center">
-          <IoStatsChart className="mr-2 text-violet-600" />
-          <span className="bg-gradient-to-r from-violet-600 to-indigo-600 text-transparent bg-clip-text">Overall CO Attainment</span>
-        </h2>
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleUploadButtonClick}
-            className="px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 flex items-center gap-2"
-          >
-            <FaFileUpload /> Upload CO Report
-          </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept=".xlsx,.xls" 
-            onChange={handleFileUpload} 
-          />
-          {uploadError && <span className="text-red-500">{uploadError}</span>}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="table-auto border-collapse border border-neutral-300 dark:border-neutral-700 w-full">
-            <thead className="bg-[#F5F5F5] dark:bg-neutral-800">
-              <tr>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <th key={i} className="border border-neutral-300 dark:border-neutral-700 px-3 py-2 text-gray-700 dark:text-white">CO{i + 1}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="bg-white dark:bg-black">
-                {matrix2.map((cell, colIndex) => (
-                  <td key={colIndex} className="border border-neutral-300 dark:border-neutral-700 px-3 py-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={cell}
-                      onChange={(e) =>
-                        handleMatrix2Change(colIndex, e.target.value)
-                      }
-                      className="border border-neutral-300 dark:border-neutral-700 rounded px-2 py-1 w-full bg-white dark:bg-neutral-800 dark:text-white"
-                    />
                   </td>
                 ))}
               </tr>
