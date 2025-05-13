@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { FaTrash, FaEdit } from "react-icons/fa";
+import { FaTrash, FaEdit, FaFileUpload, FaFileDownload } from "react-icons/fa";
 import { IoStatsChart } from "react-icons/io5";
 import { IoMdPersonAdd } from "react-icons/io";
+import { useDropzone } from 'react-dropzone';
 
 const SubDash = () => {
   const { subjectCode } = useParams();
@@ -17,6 +18,9 @@ const SubDash = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [coData, setCoData] = useState(null);
+  const [upload, setUpload] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -55,6 +59,7 @@ const SubDash = () => {
       {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} fetchData={fetchData} />}
       {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} fetchData={fetchData} fetchCOData={fetchCOData} />}
       {edit && <EditStudentPopup setEdit={setEdit} subjectCode={subjectCode} editData={editData} fetchData={fetchData} />}
+      {upload && <UploadExcelPopup setUpload={setUpload} subjectCode={subjectCode} setUploadSuccess={setUploadSuccess} setUploadError={setUploadError} fetchData={fetchData} />}
       <div>
       {isHOD && (
         <button
@@ -90,6 +95,13 @@ const SubDash = () => {
                 onClick={() => setCreate(true)}
               >
                 Add Student
+              </button>
+              <button
+                className='w-48 px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
+                onClick={() => setUpload(true)}
+              >
+                <FaFileUpload className="inline-block mr-2" />
+                Upload Excel
               </button>
             </div>
           </div>
@@ -146,6 +158,117 @@ const SubDash = () => {
     </div>
   )
 }
+
+const UploadExcelPopup = ({ setUpload, subjectCode, setUploadSuccess, setUploadError, fetchData }) => {
+  const [uploading, setUploading] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  
+  const onDrop = useCallback(async (acceptedFiles) => {
+    if (acceptedFiles.length === 0) return;
+    
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', acceptedFiles[0]);
+
+    try {
+      const response = await axios.post(`https://ei-deprecated-xpyt.onrender.com/api/operation/upload-excel/${subjectCode}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('Upload successful:', response.data);
+      setUploadSuccess(`File uploaded successfully! Created: ${response.data.results.created}, Updated: ${response.data.results.updated}`);
+      setUploadError(null);
+      fetchData();
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      setUploadError('Failed to upload file. Please try again.');
+      setUploadSuccess(null);
+    } finally {
+      setUploading(false);
+    }
+  }, [subjectCode, fetchData, setUploadSuccess, setUploadError]);
+
+  const handleDownloadTemplate = async () => {
+    try {
+      setDownloadingTemplate(true);
+      const response = await axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/excel-template/${subjectCode}`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `student_data_template_${subjectCode}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Error downloading template:', err);
+      setUploadError('Failed to download template. Please try again.');
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop,
+    accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls']
+    } 
+  });
+
+  return (
+    <div className="fixed h-full w-full flex items-center justify-center rounded-tl-2xl z-50 poppins-regular backdrop-brightness-50 dark:backdrop-brightness-50 backdrop-blur-sm">
+      <div className="max-w-md w-1/3 mx-auto bg-white dark:bg-black rounded-xl p-2 border-2 border-neutral-300 dark:border-neutral-700">
+        <div className="p-4">
+          <div className="flex justify-end text-white cursor-pointer" onClick={() => setUpload(false)}>
+            ❌
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Upload Student Data</h3>
+          
+          <div className="mb-6">
+            <button
+              onClick={handleDownloadTemplate}
+              disabled={downloadingTemplate}
+              className="w-full px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 transition-all duration-300 shadow-md"
+            >
+              <FaFileDownload className="inline-block mr-2" />
+              {downloadingTemplate ? 'Downloading...' : 'Download Excel Template'}
+            </button>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+              Use this template to ensure proper data formatting
+            </p>
+          </div>
+          
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed ${isDragActive ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' : 'border-gray-300 dark:border-gray-600'} p-6 rounded-lg text-center cursor-pointer transition-all duration-200 hover:border-violet-400`}
+          >
+            <input {...getInputProps()} />
+            {uploading ? (
+              <div className="flex flex-col items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-violet-600"></div>
+                <p className="text-gray-500 dark:text-gray-400 mt-2">Uploading...</p>
+              </div>
+            ) : isDragActive ? (
+              <p className="text-violet-600 dark:text-violet-400">Drop the file here...</p>
+            ) : (
+              <div>
+                <FaFileUpload className="text-3xl mx-auto text-gray-400 dark:text-gray-600 mb-2" />
+                <p className="text-gray-500 dark:text-gray-400">Drag and drop an Excel file here, or click to select</p>
+                <p className="text-xs text-gray-400 dark:text-gray-600 mt-2">Accepts .xlsx and .xls files</p>
+              </div>
+            )}
+          </div>
+          
+          {setUploadSuccess && <div className="text-green-500 mt-3 text-center">{setUploadSuccess}</div>}
+          {setUploadError && <div className="text-red-500 mt-3 text-center">{setUploadError}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Separate List component with its own state management
 const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error, coData }) => {
@@ -1091,6 +1214,7 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
                 name="id"
                 id="id"
                 value={formData.id}
+                disabled
                 onChange={handleChange}
                 required
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-800 dark:text-white"
@@ -1103,6 +1227,7 @@ const EditStudentPopup = ({ setEdit, subjectCode, editData, fetchData }) => {
                 type="text"
                 name="name"
                 id="name"
+                disabled
                 value={formData.name}
                 onChange={handleChange}
                 required
