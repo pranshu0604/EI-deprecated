@@ -6,6 +6,26 @@ router.use(express.json());
 
 const prisma = new PrismaClient();
 
+// Route to fetch CO data for a specific subject
+router.get('/co-form/:subjectCode', async (req, res) => {
+  const { subjectCode } = req.params;
+
+  try {
+    const coData = await prisma.cO.findUnique({
+      where: { subjectCode },
+    });
+
+    if (!coData) {
+      return res.status(404).json({ error: 'CO data not found for this subject' });
+    }
+
+    res.status(200).json(coData);
+  } catch (error) {
+    console.error('Error fetching CO data:', error);
+    res.status(500).json({ error: 'Failed to fetch CO data' });
+  }
+});
+
 // Route to post Exam CO schema
 router.post('/co-form', async (req, res) => {
   const { subjectCode, mst1, mst2 } = req.body;
