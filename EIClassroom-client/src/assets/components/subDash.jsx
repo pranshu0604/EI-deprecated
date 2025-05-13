@@ -16,6 +16,7 @@ const SubDash = () => {
   const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [coData, setCoData] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -30,9 +31,20 @@ const SubDash = () => {
     }
   };
 
+  const fetchCOData = async () => {
+    try {
+      const response = await axios.get(`https://ei-deprecated-xpyt.onrender.com/api/operation/co-form/${subjectCode}`);
+      console.log('CO Data:', response.data);
+      setCoData(response.data);
+    } catch (err) {
+      console.error('Error fetching CO data:', err);
+    }
+  };
+
   useEffect(() => {
     if (subjectCode) {
       fetchData();
+      fetchCOData();
     }
   }, [subjectCode]);
 
@@ -41,7 +53,7 @@ const SubDash = () => {
   return (
     <div className="w-full min-h-screen h-full pb-12 poppins">
       {create && <AddStudentPopup setCreate={setCreate} subjectCode={subjectCode} fetchData={fetchData} />}
-      {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} />}
+      {schema && <AddExamSchema setSchema={setSchema} subjectCode={subjectCode} fetchData={fetchData} fetchCOData={fetchCOData} />}
       {edit && <EditStudentPopup setEdit={setEdit} subjectCode={subjectCode} editData={editData} fetchData={fetchData} />}
       <div>
       {isHOD && (
@@ -52,6 +64,12 @@ const SubDash = () => {
           Back
         </button>)}
         <h1 className='text-3xl font-bold dark:text-white pt-6 text-center'>{subjectCode}</h1>
+        
+        {!coData && (
+          <div className="text-center mx-10 w-[90%] mt-4 px-4 py-2 bg-red-100 dark:bg-red-900 text-red-800 border border-red-800 dark:text-red-200 dark:border-red-200 rounded-lg">
+            Please define exam schema first
+          </div>
+        )}
         
         {/* Add Data Section */}
         
@@ -123,14 +141,14 @@ const SubDash = () => {
             </button>
           </div>
         </div>
-        <List subjectCode={subjectCode} setEdit={setEdit} setEditData={setEditData} sheets={sheets} loading={loading} error={error} />
+        <List subjectCode={subjectCode} setEdit={setEdit} setEditData={setEditData} sheets={sheets} loading={loading} error={error} coData={coData} />
       </div>
     </div>
   )
 }
 
 // Separate List component with its own state management
-const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error }) => {
+const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error, coData }) => {
   // Declare all state variables at the beginning of the component
   console.log(sheets);
 
@@ -180,14 +198,26 @@ const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error }) => 
             <th scope="col" className="px-6 py-3"></th>
             
             {/* Sub-columns for MST1 */}
-            <th scope="col" className="px-6 py-3">Q1</th>
-            <th scope="col" className="px-6 py-3">Q2</th>
-            <th scope="col" className="px-6 py-3">Q3</th>
+            <th scope="col" className="px-6 py-3">
+              {coData && coData.MST1_Q1 ? `Q1-${coData.MST1_Q1}` : "Q1"}
+            </th>
+            <th scope="col" className="px-6 py-3">
+              {coData && coData.MST1_Q2 ? `Q2-${coData.MST1_Q2}` : "Q2"}
+            </th>
+            <th scope="col" className="px-6 py-3">
+              {coData && coData.MST1_Q3 ? `Q3-${coData.MST1_Q3}` : "Q3"}
+            </th>
 
             {/* Sub-columns for MST2 */}
-            <th scope="col" className="px-6 py-3">Q1</th>
-            <th scope="col" className="px-6 py-3">Q2</th>
-            <th scope="col" className="px-6 py-3">Q3</th>
+            <th scope="col" className="px-6 py-3">
+              {coData && coData.MST2_Q1 ? `Q1-${coData.MST2_Q1}` : "Q1"}
+            </th>
+            <th scope="col" className="px-6 py-3">
+              {coData && coData.MST2_Q2 ? `Q2-${coData.MST2_Q2}` : "Q2"}
+            </th>
+            <th scope="col" className="px-6 py-3">
+              {coData && coData.MST2_Q3 ? `Q3-${coData.MST2_Q3}` : "Q3"}
+            </th>
 
             {/* Sub-columns for Assignment */}
             <th scope="col" className="px-6 py-3">CO1</th>
@@ -277,7 +307,6 @@ const List = ({ subjectCode, setEdit, setEditData, sheets, loading, error }) => 
   );
 };
 
-
 const deleteStudent = async (id, subjectCode) => {
   if(window.confirm('Are you sure you want to delete this student?')){
     const response = await axios.delete(`https://ei-deprecated-xpyt.onrender.com/api/operation/sheets/${id}/${subjectCode}`);
@@ -310,39 +339,35 @@ const validateIndirectCO = (value) => {
   return numValue >= 0 && numValue <= 3;
 };
 
-const AddExamSchema = ({ setSchema, subjectCode }) => {
+const AddExamSchema = ({ setSchema, subjectCode, fetchCOData }) => {
   const [formData, setFormData] = useState({
     subjectCode,
-    mst1: { Q1: '', Q2: '', Q3: '' }, // Keep the structure but initialize with empty strings
-    mst2: { Q1: '', Q2: '', Q3: '' }, // Keep the structure but initialize with empty strings
+    mst1: { Q1: '', Q2: '', Q3: '' },
+    mst2: { Q1: '', Q2: '', Q3: '' },
   });
   const [error, setError] = useState('');
 
-  // Handle change for dropdowns
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Update the corresponding mst1 or mst2 based on the input name
     if (name.startsWith('MST1_')) {
-      const question = name.split('_')[1]; // Extract Q1, Q2, or Q3
+      const question = name.split('_')[1];
       setFormData((prevData) => ({
         ...prevData,
-        mst1: { ...prevData.mst1, [question]: value }, // Update the specific question
+        mst1: { ...prevData.mst1, [question]: value },
       }));
     } else if (name.startsWith('MST2_')) {
       const question = name.split('_')[1];
       setFormData((prevData) => ({
         ...prevData,
-        mst2: { ...prevData.mst2, [question]: value }, // Update the specific question
+        mst2: { ...prevData.mst2, [question]: value },
       }));
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prepare the data according to your specified structure
     const dataToSubmit = {
       subjectCode: formData.subjectCode,
       mst1: {
@@ -357,13 +382,14 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
       }
     };
 
-    console.log('Data to Submit:', dataToSubmit); // Debug log to check the final form data
+    console.log('Data to Submit:', dataToSubmit);
 
     try {
       const response = await axios.post(`https://ei-deprecated-xpyt.onrender.com/api/operation/co-form`, dataToSubmit);
       alert('Form submitted successfully!');
       console.log(response.data);
-      setSchema(false); // Optionally close the form
+      setSchema(false);
+      fetchCOData();
     } catch (err) {
       console.error('Error submitting form:', err);
       setError('Failed to submit the form. Please try again.');
@@ -388,12 +414,12 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
                 </label>
                 <select
                   id={`MST1_${question}`}
-                  name={`MST1_${question}`} // Ensure name matches what you handle in handleChange
-                  value={formData.mst1[question]} // Use the correct state property
+                  name={`MST1_${question}`}
+                  value={formData.mst1[question]}
                   onChange={handleChange}
                   className="w-full p-2.5 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 >
-                  <option value="">Select CO</option> {/* Default empty option */}
+                  <option value="">Select CO</option>
                   {['CO1', 'CO2', 'CO3', 'CO4', 'CO5'].map((co, idx) => (
                     <option key={idx} value={co}>{co}</option>
                   ))}
@@ -412,12 +438,12 @@ const AddExamSchema = ({ setSchema, subjectCode }) => {
                 </label>
                 <select
                   id={`MST2_${question}`}
-                  name={`MST2_${question}`} // Ensure name matches what you handle in handleChange
-                  value={formData.mst2[question]} // Use the correct state property
+                  name={`MST2_${question}`}
+                  value={formData.mst2[question]}
                   onChange={handleChange}
                   className="w-full p-2.5 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 >
-                  <option value="">Select CO</option> {/* Default empty option */}
+                  <option value="">Select CO</option>
                   {['CO1', 'CO2', 'CO3', 'CO4', 'CO5'].map((co, idx) => (
                     <option key={idx} value={co}>{co}</option>
                   ))}
