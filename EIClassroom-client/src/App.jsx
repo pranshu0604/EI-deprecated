@@ -23,7 +23,7 @@ function App() {
             {/* <Route path="/teachers/subjects/:subjectCode" element={<SubDash />} /> */}
             <Route path='/allsubs' element={<HOD />} />
             <Route path="/allsubs/:subjectCode" element={<SubDash />} />
-            <Route path="/po-generator" element={<POGenerator />} /> 
+            <Route path="/teacers/po-generator" element={<POGenerator />} /> 
             <Route path='/students/*' element={<StudentSidebar />} />
             <Route path='/teachers/*' element={<TeacherSidebar />} />
           </Routes>
