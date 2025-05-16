@@ -20,23 +20,37 @@ router.post('/export-co-po-matrix', async (req, res) => {
     worksheet.addRow(headerRow);
     
     // Add data rows
-    const rowLabels = ["CO1", "CO2", "CO3", "CO4", "CO5", "Average"];
+    const rowLabels = ["CO1", "CO2", "CO3", "CO4", "CO5"];
     
-    // Add all rows except average
+    // Add the matrix data rows
     for (let i = 0; i < matrix.length; i++) {
       const rowData = [rowLabels[i]].concat(matrix[i]);
       worksheet.addRow(rowData);
     }
+    
+    // Calculate column averages (excluding null/undefined values)
+    const columnAverages = [];
+    for (let j = 0; j < headers.length; j++) {
+      const columnValues = matrix.map(row => row[j]).filter(val => val !== null && val !== undefined && !isNaN(val));
+      if (columnValues.length > 0) {
+        const sum = columnValues.reduce((acc, curr) => acc + parseFloat(curr), 0);
+        const avg = sum / columnValues.length;
+        columnAverages.push(avg.toFixed(2));
+      } else {
+        columnAverages.push('-');
+      }
+    }
+    
+    // Add column averages row
+    const columnAvgRow = ['Column Average'].concat(columnAverages);
+    worksheet.addRow(columnAvgRow);
 
     // Style the worksheet
     worksheet.getRow(1).font = { bold: true };
     worksheet.getColumn(1).font = { bold: true };
     
-    // Get the last row which is the average row
-    const lastRow = worksheet.lastRow;
-    lastRow.eachCell((cell) => {
-      cell.font = { bold: true };
-    });
+    // Style the Column Average row
+    worksheet.getRow(matrix.length + 2).font = { bold: true }; // Column Average row
 
     // Set column widths
     worksheet.columns.forEach(column => {
