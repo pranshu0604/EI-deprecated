@@ -147,7 +147,7 @@ const SubDash = () => {
             </button>
             <button 
               className='px-4 py-2 text-white border-2 border-neutral-200 dark:border-neutral-700 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-indigo-500 hover:to-violet-500 transition-all duration-300 shadow-md hover:shadow-indigo-500/20'
-              onClick={() => navigate(`/po-generator`)}
+              onClick={() => navigate(`/teachers/po-generator`)}
             >
               PO Generator
             </button>
